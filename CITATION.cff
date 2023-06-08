@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Muratore"
+  given-names: "Giosuè"
+  orcid: "https://orcid.org/0000-0003-0038-1432"
+- family-names: "Schneider"
+  given-names: "Csaba"
+  orcid: "https://orcid.org/0000-0002-1035-9311"
+title: "AtiyahBott"
+version: 0.1.0
+doi: 0
+date-released: 2023-06-06
+url: "https://github.com/mgemath/ToricAtiyahBott.jl"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Muratore"
+    given-names: "Giosuè"
+    orcid: "https://orcid.org/0000-0003-0038-1432"
+  - family-names: "Schneider"
+    given-names: "Csaba"
+    orcid: "https://orcid.org/0000-0002-1035-9311"
+  doi: ""
+  journal: ""
+  month: 
+  start:  # First page number
+  end:  # Last page number
+  title: "Computations of Gromov-Witten invariants of toric varieties (in preparation)"
+  issue: 
+  volume:
+  year: 
+  url: ""
+  issn: 
