@@ -9,10 +9,10 @@ struct ColorsIt
     left_siblings::Vector{Int64}
 end
 
-function Base.iterate( CI::ColorsIt, col::Vector{UInt8} = UInt8[])::Union{Nothing, Tuple{NTuple{length(CI.ls), UInt8}, Vector{UInt8}}}
+function Base.iterate( CI::ColorsIt, col::Vector{Int64} = Int64[])::Union{Nothing, Tuple{NTuple{length(CI.ls), Int64}, Vector{Int64}}}
 
     if isempty(col)
-        c::Vector{UInt8} = my_minimal_coloring(CI.ls)
+        c::Vector{Int64} = my_minimal_coloring(CI.ls)
         # return ntuple(i -> c[i], length(c)), (init_ColorsIt(CI.ls), c)
         return (c..., ), c
     end
@@ -55,7 +55,6 @@ function Base.iterate( CI::ColorsIt, col::Vector{UInt8} = UInt8[])::Union{Nothin
 
     while k <= length(CI.ls)
         v::Int64 = CI.rev_dfs[k]
-        #println( k )
 
         # compute end point of the subgraph T_v stemming at vertex v
         v_end::Int64 = CI.subgraph_ends[v]
@@ -77,15 +76,11 @@ function Base.iterate( CI::ColorsIt, col::Vector{UInt8} = UInt8[])::Union{Nothin
         # the tree can be ignored
 
         if view(CI.ls,v:v_end) == view(CI.ls,left_sibling) && view(col,v:v_end) == view(col,left_sibling)
-            #println( k )
             k = findfirst( x -> CI.rev_dfs[x] == left_s, eachindex(CI.ls) )
-            #println( v, left_s )
-            #println( "jumping to $k" )
             continue 
         end 
 
         # we decide if the color of v can be increased
-        #println( "v is $v")
         if col[v] < CI.max_col - 1 
             # we update colorable if necessary 
             if colorable < v colorable = v end 
@@ -124,10 +119,10 @@ function Base.iterate( CI::ColorsIt, col::Vector{UInt8} = UInt8[])::Union{Nothin
     
     if colorable != 1 && col[CI.parents[colorable]] == col[colorable] + 1
         # the parent of v already has color col[v] + 1 and so we increase color by two
-        col[colorable] += 0x02 
+        col[colorable] += 2 
     else 
         # else we increase the color by one
-        col[colorable] += 0x01
+        col[colorable] += 1
     end 
 
     # we reset the coloring of each subtree on the right side of v
@@ -135,7 +130,7 @@ function Base.iterate( CI::ColorsIt, col::Vector{UInt8} = UInt8[])::Union{Nothin
 
     j::Int64 = colorable+1
     while j <= length(CI.ls)
-        root_color::UInt8 = 0x00
+        root_color::Int64 = 0
 
         # find the end of the subtreee T_j stemming from vertex j
         es::Int64 = CI.subgraph_ends[j]
@@ -144,10 +139,10 @@ function Base.iterate( CI::ColorsIt, col::Vector{UInt8} = UInt8[])::Union{Nothin
         if CI.has_ci && j == 2 
             # if has central involution and j is vertex two, then its color
             # is set to the color of vertex 1 plus 1 
-            root_color = col[1] + 0x01
+            root_color = col[1] + 1
         # else 
         #     # else no constaint on root color
-        #     root_color = 0x00
+        #     root_color = 0
         end 
 
         # compute the minimal coloring for the subtree T_j
@@ -193,27 +188,26 @@ function init_ColorsIt(ls::Vector{Int64})::Tuple
     return ans
 end
 
-function my_minimal_coloring( ls::Vector{Int64}; parent_color::UInt8 = 0x00, root_color::UInt8 = 0x00 )::Vector{UInt8}#::NTuple{length(ls), UInt8}
+function my_minimal_coloring( ls::Vector{Int64}; parent_color::Int64 = 0, root_color::Int64 = 0 )::Vector{Int64}#::NTuple{length(ls), Int64}
     
     # choose the root color
-    # col_pair::NTuple{2, UInt8}
     
-    if root_color == 0x00
-        if parent_color == 0x00
-            root_color = 0x01
+    if root_color == 0
+        if parent_color == 0
+            root_color = 1
         else
-            root_color = parent_color == 0x01 ? 0x02 : 0x01 
+            root_color = parent_color == 1 ? 2 : 1 
         end
     end
 
-    if (root_color == 0x01) == isodd(ls[1])
-        col_pair = (0x02, 0x01) # = col_even, col_odd
+    if (root_color == 1) == isodd(ls[1])
+        col_pair = (2, 1) # = col_even, col_odd
     else 
-        col_pair = (0x01, 0x02)
+        col_pair = (1, 2)
     end
 
-    ans::Vector{UInt8} = [col_pair[(ls[i] % 2) + 1] for i in eachindex(ls)]
-    # for NTuple use ans::NTuple{length(ls),UInt8} = col_pair[(ls .% 2) .+ 1] 
+    ans::Vector{Int64} = [col_pair[(ls[i] % 2) + 1] for i in eachindex(ls)]
+    # for NTuple use ans::NTuple{length(ls),Int64} = col_pair[(ls .% 2) .+ 1] 
     
     ans[1] = root_color
 
@@ -270,14 +264,6 @@ function end_of_subgraph_rev( ls::Vector{Int64}, r_dfs::Vector{Int64}, v::Int64 
     return end_ver === nothing ? r_dfs[end] : r_dfs[ps+end_ver-1]
 end 
 
-# function my_end_of_subgraph_rev( ls::Vector{Int64}, r_dfs::Vector{Int64}, v::Int64 )::Int64
-
-#     # position of v in r_dfs 
-#     ps = findfirst( x -> r_dfs[x] == v, 1:length( ls ))
-#     k = findfirst( i -> i == length(ls) || (i >= ps && ls[i+1] <= ls[v]), eachindex(r_dfs))
-#     return r_dfs[k]
-# end 
-
 function my_has_central_involution( ls::Vector{Int64} )::Bool
 
     # if the graph is o--o then the answer is yes
@@ -296,65 +282,19 @@ end
 ######Of Iterators#########
 
 function Base.eltype(CI::ColorsIt)
-    NTuple{length(CI.ls), UInt8}
+    NTuple{length(CI.ls), Int64}
 end
-
-function Base.length(CI::ColorsIt)::Int64
-    function n_colorations(ls::Vector{Int64}, n::Int64)::Int64
-
-        if length(ls) < 3
-            return ls[1] == 1 ? binomial(n, length(ls)) : (n-1)^length(ls) # ls[1] == 1 is equivalent to be a starting-point graph
-        end
-    
-        my_child = findall(i -> i>length(ls) || ls[i]==ls[1]+ 1, 1:length(ls)+1)  # find all the children of the root, plus length(ls)+1
-        
-    
-        if ls[1] == 1  # ls[1] == 1 is equivalent to be a starting-point graph
-            if iseven(length(ls))  # necessary condition to have the bad involution
-                if view(ls,my_child[1]+1:my_child[2]-1) == 1 .+ view(ls,my_child[2]:length(ls))  # check if it has the bad involution
-                    c = n_colorations(ls[my_child[1]:my_child[2]-1], n)   # compute the number of colorations of the main subgraph
-                    return div(n*(c^2),2*(n-1))  # return the number of coloration computing only the number of colorations of the main subtree
-                end
-            end
-            ans = n  # in the starting-point graph, the root can assume n values since it has no parent
-        else
-            ans = n - 1 # we are not in the starting-point graph, so the root has a parent to deal with
-        end
-    
-        # here we compute the number of colorations of each subgraph
-        last_sub = ls[my_child[1]:my_child[2]-1]  # this is the subgraph
-        m = 1                                     # this is its multiplicity
-    
-        for x in 3:length(my_child)
-            if last_sub == view(ls, my_child[x-1]:my_child[x]-1)  # we run up to find a different subgraph
-                m += 1
-            else
-                c = n_colorations(last_sub, n)   # number of colorations of this subgraph...
-                ans *= binomial(c+m-1,m)         # ...counted with multiplicity
-                last_sub = ls[my_child[x-1]:my_child[x]-1]  # pass to the next subgraph
-                m = 1
-            end
-        end
-    
-        c = n_colorations(last_sub, n)  # compute the number of colorations of the last subgraph
-        ans *= binomial(c+m-1,m)        # with multiplicity
-    
-        return ans
-    end
-    return n_colorations(CI.ls, CI.max_col)
-end
-
+-
 ### this function counts the isomorphisms of a tree with level sequence ls. Optionally, the tree can be colored with coloration col
 
-# function count_iso(ls::Vector{Int64}, col::Vector{UInt8} = UInt8[])::Int64
-function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{UInt8}}, m::Tuple{Vararg{Int64}})::Int64
+function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int64}})::Int64
 
     isempty(m) && return count_iso(ls, col)
 
-    temp_col = Vector{UInt8}(undef, length(ls))
+    temp_col = Vector{Int64}(undef, length(ls))
     for i in eachindex(temp_col)
         if i in m
-            temp_col[i] = typemax(UInt8) - UInt8(i)
+            temp_col[i] = typemax(Int64) - i
         else
             temp_col[i] = col[i]
         end
@@ -363,7 +303,7 @@ function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{UInt8}}, m::Tuple{Vararg
     return count_iso(ls, (temp_col...,))
 end
 
-function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{UInt8}} = ())::Int64
+function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{Int64}} = ())::Int64
 
     is_empty::Bool = isempty(col)
 
@@ -391,12 +331,12 @@ function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{UInt8}} = ())::Int64
 
     # here we compute the number of colorations of each subgraph
     last_sub::Vector{Int64} = ls[my_child[1]:my_child[2]-1]  # this is the subgraph
-    last_col::Tuple{Vararg{UInt8}} = col
+    last_col::Tuple{Vararg{Int64}} = col
 	
 	if !is_empty
         last_col = col[my_child[1]:my_child[2]-1]
     end
-    # last_col::Vector{Int64} = col[my_child[1]:my_child[2]-1]
+    
     m::Int64 = 1
     ans::Int64 = 1
     
@@ -422,3 +362,54 @@ function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{UInt8}} = ())::Int64
     return ans
 end
 
+#This functions computes the number of colorations. It is not called anywhere in the package, but I decided to keep it because it could be useful in the future
+
+# function n_colorations(ls::Vector{Int64}, n::Int64, magn::Int64)::Int64  # magn is the number of neighbors cones of a cone. It is nc[1]
+
+#     if length(ls) < 3
+#         if ls[1] == 1
+#             if length(ls) == 1
+#                 return n
+#             else
+#                 return div(n*magn, 2)
+#             end
+#         else
+#             return magn^length(ls)
+#         end
+#     end
+
+#     my_child = findall(i -> i>length(ls) || ls[i]==ls[1]+ 1, 1:length(ls)+1)  # find all the children of the root, plus length(ls)+1
+    
+
+#     if ls[1] == 1  # ls[1] == 1 is equivalent to be a starting-point graph
+#         if iseven(length(ls))  # necessary condition to have the bad involution
+#             if view(ls,my_child[1]+1:my_child[2]-1) == 1 .+ view(ls,my_child[2]:length(ls))  # check if it has the bad involution
+#                 c = n_colorations(ls[my_child[1]:my_child[2]-1], n, magn)   # compute the number of colorations of the main subgraph
+#                 return div(n*(c^2),2*magn)  # return the number of coloration computing only the number of colorations of the main subtree
+#             end
+#         end
+#         ans = n  # in the starting-point graph, the root can assume n values since it has no parent
+#     else
+#         ans = magn # we are not in the starting-point graph, so the root has a parent to deal with
+#     end
+
+#     # here we compute the number of colorations of each subgraph
+#     last_sub = ls[my_child[1]:my_child[2]-1]  # this is the subgraph
+#     m = 1                                     # this is its multiplicity
+
+#     for x in 3:length(my_child)
+#         if last_sub == view(ls, my_child[x-1]:my_child[x]-1)  # we run up to find a different subgraph
+#             m += 1
+#         else
+#             c = n_colorations(last_sub, n, magn)   # number of colorations of this subgraph...
+#             ans *= binomial(c+m-1,m)         # ...counted with multiplicity
+#             last_sub = ls[my_child[x-1]:my_child[x]-1]  # pass to the next subgraph
+#             m = 1
+#         end
+#     end
+
+#     c = n_colorations(last_sub, n, magn)  # compute the number of colorations of the last subgraph
+#     ans *= binomial(c+m-1,m)        # with multiplicity
+
+#     return ans
+# end

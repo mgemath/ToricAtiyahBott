@@ -14,17 +14,12 @@ function num_marks(mark::Tuple{Vararg{Int64}}, v::Int64)::Int64
     return count(t -> t == v, mark)
 end
 
-function ismin(ls::Vector{Int64}, col::Tuple{Vararg{UInt8}}, m::Tuple{Vararg{Int64}}, par::Vector{Int64}, sub_end::Vector{Int64})::Bool
+function ismin(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int64}}, par::Vector{Int64}, sub_end::Vector{Int64})::Bool
 
-    # if top_aut == 1 || isempty(m) || maximum(m) < 3
-    #     return true
-    # end
-
-    marks = sort(unique(m)) # marks = [2]  [2,3]
-    # 
+    marks = sort(unique(m))
     
     for j in marks # eachindex(marks)
-        # find the all the left vertex with the same dept
+        # find the all the left vertex with the same depth
         for k in findall(i -> (i<j) && ls[i] == ls[j] && col[i] == col[j] && ls[sub_end[i]] == ls[sub_end[j]], eachindex(ls))
             # k = findlast(i -> (i<j) && ls[i] == ls[j], 1:n)
 
@@ -52,8 +47,8 @@ function ismin(ls::Vector{Int64}, col::Tuple{Vararg{UInt8}}, m::Tuple{Vararg{Int
                 root_k = par_k
                 root_j = par_j
 
-                par_k = par[par_k]# findlast(i -> i < par_k && ls[i] == ls[par_k] - 1, eachindex(ls))
-                par_j = par[par_j]# findlast(i -> i < par_j && ls[i] == ls[par_j] - 1, eachindex(ls))
+                par_k = par[par_k]
+                par_j = par[par_j]
             end
 
             # Now we can check if there is such isomorphism

@@ -6,18 +6,6 @@ export
 import Base: *, //, /, ^, +, -, inv, one, zero
 
 """
-    codimension(cc)
-
-The codimension of the cohomological class `cc`.
-# Arguments
-- `cc::CohomologyClass`: the cohomology class.
-"""
-function codimension(c::CohomologyClass)::Int64
-
-    return degree(Int64, polynomial(c))
-end
-
-"""
     vir_dim_M(v, beta, m)
 
 The virtual dimension of the moduli space of stable rational map to the toric variety `v`, of class `beta` with `m` marks.
@@ -46,16 +34,16 @@ The codimension of the equivariant class `P`.
 # Arguments
 - `v::NormalToricVariety`: the toric variety.
 - `beta::CohomologyClass`: the class of the stable maps.
-- `m::Int64`: the number of marks.
+- `m::Int64`: the number of marks. If omitted, it is assumed as `m=0`.
 - `P`: the equivariant class.
 """
 function codimension(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, P)::Int64
     
-    return P(v, beta, n_marks, 0, 0, 0, 0, 0).c
+    return Base.invokelatest( P.func, v, beta, n_marks, 0, 0, 0, 0, 0).c
 end
 
 """
-    is_zero_cycle(n, d, m, P)
+    is_zero_cycle(v, beta, m, P)
 
 Return `true` if the equivariant class `P` is a 0-cycle in the moduli space, `false` otherwise.
 # Arguments

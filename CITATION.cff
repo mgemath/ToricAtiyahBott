@@ -4,9 +4,6 @@ authors:
 - family-names: "Muratore"
   given-names: "Giosuè"
   orcid: "https://orcid.org/0000-0003-0038-1432"
-- family-names: "Schneider"
-  given-names: "Csaba"
-  orcid: "https://orcid.org/0000-0002-1035-9311"
 title: "AtiyahBott"
 version: 0.1.0
 doi: 0
@@ -18,9 +15,6 @@ preferred-citation:
   - family-names: "Muratore"
     given-names: "Giosuè"
     orcid: "https://orcid.org/0000-0003-0038-1432"
-  - family-names: "Schneider"
-    given-names: "Csaba"
-    orcid: "https://orcid.org/0000-0002-1035-9311"
   doi: ""
   journal: ""
   month: 

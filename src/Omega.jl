@@ -3,23 +3,25 @@ function omega(v::NormalToricVariety, n_SIGMA1::Int64, n_SIGMA2::Int64, scalars:
     SIGMA1 = maximal_cones(v)[n_SIGMA1]
     SIGMA2 = maximal_cones(v)[n_SIGMA2]
 
-    ud = QQFieldElem[0, 0]
+    ud = QQFieldElem[]
 
     for ray in rays(SIGMA1)
         ray in rays(SIGMA2) && continue
         for pol_ray in rays(polarize(SIGMA1))
             dot(ray, pol_ray) == 0 && continue
-            ud = pol_ray
+            # ud = pol_ray
+            ud = lcm(denominator.(pol_ray))*pol_ray
             break
         end
         break
     end
 
-    ans = zero(scalars[1])
+    ans = F(0)
     # ans = zero(T)
 
     for (k, vi) in enumerate(rays(v))# keys(rays_enum)
-        ans += Int64(dot(vi, ud))*scalars[k]
+        # ans += Int64(dot(vi, ud))*scalars[k]
+        ans += dot(vi, ud)*scalars[k]
     end
 
     return ans

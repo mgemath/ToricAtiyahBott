@@ -41,30 +41,11 @@ end
 
 function nef_divisors(v::NormalToricVariety)::Vector{CohomologyClass}
 
-    ans = CohomologyClass[]
     if dim(v) == 1
-        ans = [cohomology_class(v, gens(cohomology_ring(v))[1])]
-        return ans
+        return [cohomology_class(v, gens(cohomology_ring(v))[1])]
     end
 
-    position = [0 for _ in 1:n_cones(v)]
-    len = length(cones(v,1))
-
-    all_curves = CohomologyClass[]
-    for index in 1:length(cones(v, dim(v) - 1))
-        position[n_maximal_cones(v) + index] = 1
-        curve = cohomology_class( rational_equivalence_class(v, position) )
-        position[n_maximal_cones(v) + index] = 0
-        push!(all_curves, curve)
-    end
-
-    for D in Iterators.map(p -> cohomology_class(toric_divisor(v,p)), Iterators.map(i -> [Int(i == j) for j in 1:len], 1:len))
-        D in ans && continue
-
-        if all(curve -> integrate(curve*D) > -1, all_curves)
-            push!(ans, D)
-        end
-    end
-
-    return ans
+    rncX = matrix(ZZ, rays(nef_cone(v)))
+    lncX = [toric_line_bundle(v, vec([ZZ(k) for k in rncX[l,:]])) for l in 1:nrows(rncX)]
+    return [cohomology_class(l) for l in lncX]
 end

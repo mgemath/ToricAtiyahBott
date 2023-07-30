@@ -1,3 +1,6 @@
+export
+	moment_graph
+
 function neighbors_cones(v::NormalToricVariety)::Dict{Int64, Vector{Int64}}
 
     len = length(maximal_cones(v))
@@ -22,7 +25,7 @@ function is_admissible_color(nc::Dict{Int64, Vector{Int64}}, g::Graph{Undirected
     return all(e -> col[src(e)] in nc[col[dst(e)]], edges(g))
 end
 
-function get_inv_curve(v::NormalToricVariety, nc::Dict{Int64, Vector{Int64}})::Dict{Tuple{Int64,Int64},CohomologyClass}
+function get_inv_curve(v::NormalToricVariety, nc::Dict{Int64, Vector{Int64}})::Dict{Tuple{Int64,Int64}, CohomologyClass}
     
     ans = Dict{Tuple{Int64,Int64},CohomologyClass}() # the dict that will be returned
     if dim(v) == 1
@@ -49,7 +52,6 @@ function get_inv_curve(v::NormalToricVariety, nc::Dict{Int64, Vector{Int64}})::D
     return ans
 end
 
-# function index_in(a::Union{Cone{QQFieldElem}, RayVector{QQFieldElem}}, b::SubObjectIterator{Cone{QQFieldElem}})::Int64
 function index_in(a::Union{Cone{QQFieldElem}, RayVector{QQFieldElem}}, b::Union{SubObjectIterator{RayVector{QQFieldElem}},SubObjectIterator{Cone{QQFieldElem}}})::Int64
     ans = 0
 
@@ -60,3 +62,36 @@ function index_in(a::Union{Cone{QQFieldElem}, RayVector{QQFieldElem}}, b::Union{
 
     return ans
 end
+
+"""
+    moment_graph(v; show_graph)
+
+The moment graph of the toric variety ``v``. It prints all pairs ``(i,j)``, together with the cohomology class of the invariant curve passing through the points corresponding to the maximal cones ``i`` and ``j``. The cohomology class is expressed in the coordinates of the Chow ring. 
+# Arguments
+- `v::NormalToricVariety`: the toric variety.
+
+# Example
+```julia-repl
+julia> P1 = projective_space(NormalToricVariety, 1);
+julia> mg = moment_graph(P1);
+(1,2) -> x2
+julia> C = mg[1,2];
+```
+If `show_graph` is omitted or false, the output is omitted.
+"""
+function moment_graph(v::NormalToricVariety; show_graph::Bool = true)::Dict{Tuple{Int64,Int64}, CohomologyClass}
+	
+	nc = neighbors_cones(v)
+	ans = get_inv_curve(v, nc)
+	
+    if show_graph
+        for i in 1:n_maximal_cones(v)
+            for j in (i+1):n_maximal_cones(v)
+                i in nc[j] || continue
+                println("($i,$j) -> ", polynomial(ans[i,j]))
+            end
+        end
+    end
+
+	return ans
+end	

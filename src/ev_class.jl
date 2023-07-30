@@ -27,7 +27,7 @@ julia> P = ev(1, p)*ev(2, p);
 julia> IntegrateAB(v, p^0, 2, P);
 Result: 1
 julia> v = projective_space(NormalToricVariety, 2);  # 2-dimensional projective space
-julia> l = toric_line_bundle(v, [ZZRingElem(1)]); 
+julia> l = toric_line_bundle(v, [1]); 
 julia> P = (ev(1, l)*ev(2, l))^2;
 julia> line = cohomology_class(toric_divisor(v, [1,0,0]));
 julia> IntegrateAB(v, line, 2, P);
@@ -37,101 +37,100 @@ Result: 1
 
     The program will stop if `j` is not between 1 and the number of marks.
 
+
+Let us give some more examples. Let ``v = \\mathbb{P}(\\mathcal{O}_{\\mathbb{P}^3}\\oplus\\mathcal{O}_{\\mathbb{P}^3}(5))``.
+```julia-repl
+julia> P3 = projective_space(NormalToricVariety, 3);
+julia> v = proj(toric_line_bundle(P3, [0]),toric_line_bundle(P3, [5]));
+```
+Using [`moment_graph`](@ref) we have a quick access to the moment graph of ``v``.
+```julia-repl
+julia> mg = moment_graph(v);
+```
+Consider the following curve class.
+```julia-repl
+julia> beta = mg[1,2];
+```
+If ``x`` is the class of a point of ``v``, in order to compute the following invariant
+```math
+\\begin{aligned}
+\\int_{\\overline{M}_{0,1}(v, \\beta)} \\mathrm{ev}_{1}^{*}(x) &= 1 \\\\
+\\end{aligned}
+```
+we use the code:
+```julia-repl
+julia> P = ev(1, a_point(v));
+julia> IntegrateAB(v, beta, 1, P);
+```
 """
-function ev(j::Int64, cc::Union{CohomologyClass,ToricLineBundle})::EquivariantClass
+function ev(j::Int64, cc::CohomologyClass)::EquivariantClass
     
-    SPLIT = split_cc(isa(cc, CohomologyClass) ? cc : cohomology_class(toric_divisor(cc)))
-    Z = [(i, Int64.(exponents(SPLIT[i])[1,:]), Int64(Oscar.coefficients(SPLIT[i])[1])) for i in eachindex(SPLIT)]
-    rule = :(_ev(v, od, nc, iv, g, col, weights, marks, $j, $Z))
-    
+    rule = :(_ev(v, od, nc, iv, g, col, weights, marks, $j, $cc))
     return EquivariantClass( rule, eval( :((v, od, nc, iv, g, col, weights, marks) -> $rule )))
 end
-# function ev(j::Int64, cc::CohomologyClass)::EquivariantClass
+
+function ev(j::Int64, l::ToricLineBundle)::EquivariantClass
     
-#     # rule = :(ev(v, od, nc, col, marks, $j, $Z))
-#     # return EquivariantClass( rule, eval( :((v, od, nc, d, g, col, w, marks) -> $rule )))
-#     rule = :(_ev(v, od, nc, iv, g, col, weights, marks, $j, $cc))
-#     return EquivariantClass( rule, eval( :((v, od, nc, iv, g, col, weights, marks) -> $rule )))
-# end
+    return ev(j, cohomology_class(l))
+end
 
-# function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, Z::CohomologyClass)::T
+function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, cc::CohomologyClass)::T
 
-#     length(marks) == 0 && return one(od[first(keys(od))])
-#     SPLIT = split_cc(Z)
+    length(marks) == 0 && return F(1)
+    if (col[marks[j]], cc) in keys(v.__attrs[:ev_dict])
+        return v.__attrs[:ev_dict][(col[marks[j]], cc)]
+    end
 
-#     ans = [one(od[first(keys(od))]) for _ in 1:length(SPLIT)]
+    v.__attrs[:ev_dict][(col[marks[j]], cc)] = just_ev(v, od, nc, col[marks[j]], cc)
 
-#     for (i, mon) in enumerate(SPLIT)
-#         e = exponents(mon)
-#         for (k, ray) in enumerate(rays(v))
-#             ####
-#             if !(ray in rays(maximal_cones(v)[col[marks[j]]]))
-#                 if e[1, k] == 0
-#                     continue
-#                 else
-#                     # ans[i] *= zero(T)
-#                     ans[i] *= zero(od[first(keys(od))])
-#                     break
-#                 end
-#             end
-#             ####
-#             # e[1, k] == 0 && continue
-#             # ray in rays(maximal_cones(v)[col[marks[j]]]) || continue
-#             # l_j = e[1, k]
-#             for n_gamma in nc[col[marks[j]]]
-#                 ray in rays(maximal_cones(v)[n_gamma]) && continue
-#                 ans[i] *= od[(col[marks[j]], n_gamma)]^Int64(e[1, k])
-#                 break
-#             end
-#         end
-#         ans[i] *= Int64(Oscar.coefficients(mon)[1])
-#     end
+    return v.__attrs[:ev_dict][(col[marks[j]], cc)]
+end
 
-#     return sum(ans)
-# end
-
-
-function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, Z::Vector{Tuple{Int64, Matrix{Int64}, Int64}})::T
-
-    length(marks) == 0 && return one(od[first(keys(od))])
-    ans = [one(od[first(keys(od))]) for _ in 1:length(Z)]
-
+function just_ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, col_vert::Int64, cc::CohomologyClass)::T
+    
+    SPLIT = split_cc(cc)
+    Z = [(i, Int64.(exponents(SPLIT[i])[1,:]), Oscar.coefficients(SPLIT[i])[1]) for i in eachindex(SPLIT)]
+    ans = [F(1) for _ in 1:length(Z)]
+ 
     for (i, e, coef) in Z
         for (k, ray) in enumerate(rays(v))
-            ####
-            if !(ray in rays(maximal_cones(v)[col[marks[j]]]))
-                if e[k] == 0
-                    continue
-                else
-                    # ans[i] *= zero(T)
-                    ans[i] *= zero(od[first(keys(od))])
-                    break
-                end
+            e[k] == 0 && continue
+
+            if !(ray in rays(maximal_cones(v)[col_vert]))
+                ans[i] = F(0)
+                break
             end
-            ####
-            # e[1, k] == 0 && continue
-            # ray in rays(maximal_cones(v)[col[marks[j]]]) || continue
-            # l_j = e[1, k]
-            for n_gamma in nc[col[marks[j]]]
+
+            for n_gamma in nc[col_vert]
                 ray in rays(maximal_cones(v)[n_gamma]) && continue
-                ans[i] *= od[(col[marks[j]], n_gamma)]^e[k]
+                # println(col_vert," " , n_gamma, " ", od[(col_vert, n_gamma)])
+                ans[i] *= od[(col_vert, n_gamma)]^e[k]
+                # println("ans[i]= $(ans[i])")
+                # mul!(ans[i], ans[i], od[(col_vert, n_gamma)]^e[k])
                 break
             end
         end
+        
+        # mul!(ans[i], ans[i], coef)
         ans[i] *= coef
     end
-
+    
+    # println("col: ", col_vert, "  ", ans[1])
     return sum(ans)
 end
 
-function _ev(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null::Int64, null2::Int64, null3::Int64, null4::Int64, null5::Int64, i::Int64, Z::Vector{Tuple{Int64, Matrix{Int64}, Int64}})::Cycle
+
+function _ev(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null::Int64, null2::Int64, null3::Int64, null4::Int64, null5::Int64, j::Int64, cc::CohomologyClass)::Cycle
+
+    SPLIT = split_cc(cc)
+    Z = [(i, Int64.(exponents(SPLIT[i])[1,:]), Oscar.coefficients(SPLIT[i])[1]) for i in eachindex(SPLIT)]
 
     try
         if !all(i -> sum(Z[1][2]) == sum(Z[i][2]), eachindex(Z)) #!ishomogeneous(polynomial(Z))
             error("The cohomology class is not homogeneous")
         end
-        if (i < 1 || i > n_marks)
-            error(string("ev requires a positive integer between 1 and ", n_marks, ", correct ",i))
+        if (j < 1 || j > n_marks)
+            error(string("ev requires a positive integer between 1 and ", n_marks, ", correct ", j))
         end
     catch e
         printstyled(stderr,"ERROR: ", bold=true, color=:red)
@@ -142,16 +141,3 @@ function _ev(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null:
     
     return Cycle(sum(Z[1][2]), 0)
 end
-
-# function ev_dict(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, Z::Vector{Tuple{Int64, Matrix{Int64}, Int64}})
-#     ans = Dict{Int64, T}()
-
-#     for c in 1:n_maximal_cones(v)
-#         ans[c] = _ev(v, od, nc, iv, g, (c, ), weights, (1, ), 1, Z)
-#     end
-
-#     return ans
-# end
-# function __ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, Z::Vector{Tuple{Int64, Matrix{Int64}, Int64}}, evd)::T
-#     return evd[col[marks[j]]]
-# end
