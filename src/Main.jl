@@ -3,7 +3,6 @@ export
 
 T = QQFieldElem; F = T  # This line is useful to fix the arithmetic of the numbers. T is the type we use, and F is a function that returns the numbers 0 and 1 to the same type as T.
 
-
 """
     IntegrateAB(v, beta, m, P; do_check, show_bar)
 
@@ -17,14 +16,17 @@ Apply the Atiyah-Bott residue formula to compute the integral of the equivariant
 - `show_bar::Bool`: hide the progress bar if and only if this condition is `false`. By default is `true`.
 
 In order to use this function, one must define `v`, `beta` and `P` using Oscar:
-```julia-repl
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
 julia> v = del_pezzo_surface(1); # this is the blow-up of the projective plane at a point
+
 julia> beta = cohomology_class(toric_divisor(v, [0,0,1,0])); # class of pull back of a line of P2
+
 julia> P = ev(1, a_point(v))*ev(2, a_point(v)); # pull back of a point through the first and second evaluations maps
-julia> IntegrateAB(v, beta, 2, P);
+
+
+julia> IntegrateAB(v, beta, 2, P, show_bar=false); # show_bar can be also true
 Result: 1
 ```
-
 The function returns an array of the same dimension of `P` (non-vectorized classes are assumed as 1-dimensional arrays). The Julia notation for accessing to array is `name_of_array[i]` where `i` is an index starting from 1.
 
 More examples are available in the support of the equivariant classes. It is enough to type `?` and then the name of the class. Currently, the supported classes are:

@@ -20,17 +20,27 @@ The following Gromov-Witten invariants
 \\end{aligned}
 ```
 can be computed as
-```julia-repl
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
 julia> v = projective_space(NormalToricVariety, 1);  # 1-dimensional projective space
+
 julia> p = a_point(v); # the cohomology class of a point. Note that p^0 gives the class of the entire variety
+
 julia> P = ev(1, p)*ev(2, p);
-julia> IntegrateAB(v, p^0, 2, P);
+
+
+julia> IntegrateAB(v, p^0, 2, P, show_bar=false); # show_bar can be also true
 Result: 1
+
 julia> v = projective_space(NormalToricVariety, 2);  # 2-dimensional projective space
-julia> l = toric_line_bundle(v, [1]); 
+
+julia> l = toric_line_bundle(v, [1]);
+
 julia> P = (ev(1, l)*ev(2, l))^2;
+
+
 julia> line = cohomology_class(toric_divisor(v, [1,0,0]));
-julia> IntegrateAB(v, line, 2, P);
+
+julia> IntegrateAB(v, line, 2, P, show_bar=false); # show_bar can be also true
 Result: 1
 ```
 !!! warning "Attention!"

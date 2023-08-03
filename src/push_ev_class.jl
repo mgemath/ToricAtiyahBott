@@ -18,15 +18,21 @@ The following Gromov-Witten invariants
 \\end{aligned}
 ```
 can be computed as
-```julia-repl
-julia> using ToricAtiyahBott
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
 julia> v = projective_space(NormalToricVariety, 4);
+
 julia> line = cohomology_class(toric_line_bundle(v, [1]))^3;
+
 julia> P = push_ev(toric_line_bundle(v, [5]));
-julia> IntegrateAB(v, line, 0, P);
+
+
+julia> IntegrateAB(v, line, 0, P, show_bar=false);
 Result: 2875
+
 julia> P = push_ev(toric_line_bundle(v, [5]))*Psi(1);
-julia> IntegrateAB(v, line, 1, P);
+
+
+julia> IntegrateAB(v, line, 1, P, show_bar=false);
 Result: -5750
 ```
 """

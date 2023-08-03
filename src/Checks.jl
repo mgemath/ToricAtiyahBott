@@ -15,9 +15,12 @@ The virtual dimension of the moduli space of stable rational map to the toric va
 - `m::Int64`: the number of marks.
 
 # Example
-```julia-repl
+
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
 julia> v = projective_space(NormalToricVariety, 2);
+
 julia> beta = cohomology_class(toric_divisor(v, [1,0,0]));
+
 julia> vir_dim_M(v,beta,0)
 2
 ```

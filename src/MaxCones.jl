@@ -71,13 +71,22 @@ The moment graph of the toric variety ``v``. It prints all pairs ``(i,j)``, toge
 - `v::NormalToricVariety`: the toric variety.
 
 # Example
-```julia-repl
-julia> P1 = projective_space(NormalToricVariety, 1);
-julia> mg = moment_graph(P1);
-(1,2) -> x2
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
+julia> P2 = projective_space(NormalToricVariety, 2);
+
+julia> mg = moment_graph(P2);
+(1,2) -> x3
+(1,3) -> x3
+(2,3) -> x3
+
 julia> C = mg[1,2];
 ```
 If `show_graph` is omitted or false, the output is omitted.
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
+julia> P1 = projective_space(NormalToricVariety, 1);
+
+julia> mg = moment_graph(P1, show_graph=false);
+```
 """
 function moment_graph(v::NormalToricVariety; show_graph::Bool = true)::Dict{Tuple{Int64,Int64}, CohomologyClass}
 	

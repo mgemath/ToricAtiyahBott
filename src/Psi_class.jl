@@ -30,19 +30,31 @@ The following Gromov-Witten invariants
 \\end{aligned}
 ```
 can be computed as
-```julia-repl
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
 julia> v = projective_space(NormalToricVariety, 2);  # 2-dimensional projective space
+
 julia> line = cohomology_class(toric_divisor(v, [1,0,0])); # the cohomology class of a line
+
 julia> P = ev(1, line)^2*Psi(4);
-julia> IntegrateAB(v, 2*line, 1, P);
+
+
+julia> IntegrateAB(v, 2*line, 1, P, show_bar=false);
 Result: 1//8
-julia> Q = Psi([2,2])
-julia> IntegrateAB(v, line, 2, Q);
+
+julia> Q = Psi([2,2]);
+
+
+julia> IntegrateAB(v, line, 2, Q, show_bar=false);
 Result: 6
+
 julia> v = projective_space(NormalToricVariety, 3);  # 3-dimensional projective space
+
 julia> plane = cohomology_class(toric_line_bundle(v, [1])); # cohomology class of a plane
+
 julia> P = ev(1, plane)*(Psi(7)*ev(1, plane)+Psi(6)*ev(1, plane)^2);
-julia> IntegrateAB(v, 2*plane^2, 1, P);
+
+
+julia> IntegrateAB(v, 2*plane^2, 1, P, show_bar=false);
 Result: -5//16
 ```
 !!! warning "Psi is singleton!"

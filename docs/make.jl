@@ -4,7 +4,8 @@ using ToricAtiyahBott
 makedocs(
     sitename = "ToricAtiyahBott",
     format = Documenter.HTML(),
-    modules = [ToricAtiyahBott]
+    modules = [ToricAtiyahBott],
+    doctest = false,
 )
 
 deploydocs(

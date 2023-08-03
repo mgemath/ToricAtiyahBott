@@ -7,12 +7,12 @@ Full documentation is available here: https://mgemath.github.io/ToricAtiyahBott.
 ## Installation
 This package requires Oscar, so make sure that you can use Oscar before installing this package. See https://www.oscar-system.org/install/.
 In order to install this package, type:
-```julia
+```julia-repl
 julia> using Pkg
 julia> Pkg.add("ToricAtiyahBott")
 ```
 After the installation, simply type:
-```julia
+```julia-repl
 julia> using ToricAtiyahBott
 ```
 every time you want to use the program.
@@ -20,7 +20,7 @@ every time you want to use the program.
 To use our code, you need to define the following: X (a toric variety), beta (the cohomology class of a curve), m (the number of marks), P (an equivariant class). See documentation for some examples.
 
 The full list of the currently supported equivariant classes is the following:
-```julia-repl
+```julia
 ev(j, cc), ev(j, l) (pull back of the class cc (or line bundle l) with respect to the ev_j)
 push_ev(l)  (push forward with respect to the forgetful map of the pull back of l)
 R1_ev(l)           (first derived functor of direct image of the pull back of l)

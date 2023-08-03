@@ -17,11 +17,15 @@ The following Gromov-Witten invariants
 \\end{aligned}
 ```
 can be computed as
-```julia-repl
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
 julia> v = projective_space(NormalToricVariety, 3);
+
 julia> line = cohomology_class(toric_line_bundle(v, [1]))^2;
+
 julia> P = push_omega(toric_line_bundle(v, [2]))*ev(1, line)*ev(2, a_point(v));
-julia> IntegrateAB(v, line, 2, P);
+
+
+julia> IntegrateAB(v, line, 2, P, show_bar=false);
 Result: 1
 ```
 """
