@@ -1,4 +1,4 @@
-# AtiyahBott.jl
+# ToricAtiyahBott.jl
 [![Doc](https://img.shields.io/badge/docs-stable-blue.svg)](https://mgemath.github.io/ToricAtiyahBott.jl/)
 
 This package is a work-in-progress implementation of the Atiyah-Bott residue formula for the moduli space of genus 0 stable maps to a toric variety in the Julia language.<br>
