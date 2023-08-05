@@ -10,7 +10,7 @@ makedocs(
 
 deploydocs(
     repo = "github.com/mgemath/ToricAtiyahBott.jl.git",
-    versions = "v#.#",
+    versions = nothing,
     #=,
     target = "build",
     push_preview = true,=#
