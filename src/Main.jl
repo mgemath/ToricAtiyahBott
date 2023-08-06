@@ -23,7 +23,6 @@ julia> beta = cohomology_class(toric_divisor(v, [0,0,1,0])); # class of pull bac
 
 julia> P = ev(1, a_point(v))*ev(2, a_point(v)); # pull back of a point through the first and second evaluations maps
 
-
 julia> IntegrateAB(v, beta, 2, P, show_bar=false); # show_bar can be also true
 Result: 1
 ```

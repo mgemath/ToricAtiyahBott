@@ -1,7 +1,7 @@
 name = "ToricAtiyahBott"
 uuid = "72dfc14a-8332-4639-b9f3-8b017b604ecf"
 authors = ["Giosuè Muratore <muratore.g.e@gmail.com >"]
-version = "0.9.2"
+version = "0.9.3"
 
 [deps]
 Oscar = "f1435218-dba5-11e9-1e4d-f1a5fab5fc13"

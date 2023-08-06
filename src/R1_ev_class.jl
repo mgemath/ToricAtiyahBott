@@ -24,7 +24,6 @@ julia> beta = moment_graph(P1)[1,2];
 
 julia> P = R1_ev(toric_line_bundle(P1, [-1]))^2;
 
-
 julia> IntegrateAB(P1, beta, 0, P, show_bar=false);
 Result: 1
 ```

@@ -5,10 +5,7 @@ struct EquivariantClass
     func::Function
 end 
 
-function Base.show( io::IO, ec::EquivariantClass )::Nothing  
-        #print(io, "EquivariantClass[ ... ]" )
-        return nothing
-end
+function Base.show(::IO, ::EquivariantClass) end
 
 #########################################
 ### Operations of equivariant classes ###
@@ -18,10 +15,10 @@ end
 function *( ec1::EquivariantClass, ec2::EquivariantClass )::EquivariantClass
     
     rule = quote
-        $(ec1.rule)*$(ec2.rule)
+        $(ec1.rule)*$(ec2.rule);
     end 
 
-    return EquivariantClass( rule, eval( :((v, od, nc, iv, g, col, weights, marks) -> $rule )))
+    return EquivariantClass( rule, eval( :((v, od, nc, iv, g, col, weights, marks) -> $rule )));
 end
 
 function *( ec1::EquivariantClass, n::Number )::EquivariantClass

@@ -27,7 +27,6 @@ julia> p = a_point(v); # the cohomology class of a point. Note that p^0 gives th
 
 julia> P = ev(1, p)*ev(2, p);
 
-
 julia> IntegrateAB(v, p^0, 2, P, show_bar=false); # show_bar can be also true
 Result: 1
 
@@ -36,7 +35,6 @@ julia> v = projective_space(NormalToricVariety, 2);  # 2-dimensional projective 
 julia> l = toric_line_bundle(v, [1]);
 
 julia> P = (ev(1, l)*ev(2, l))^2;
-
 
 julia> line = cohomology_class(toric_divisor(v, [1,0,0]));
 
@@ -61,16 +59,41 @@ Consider the following curve class.
 ```julia-repl
 julia> beta = mg[1,2];
 ```
-If ``x`` is the class of a point of ``v``, in order to compute the following invariant
+If ``\\mathrm{p}`` is the class of a point of ``v``, in order to compute the following invariant
 ```math
 \\begin{aligned}
-\\int_{\\overline{M}_{0,1}(v, \\beta)} \\mathrm{ev}_{1}^{*}(x) &= 1 \\\\
+\\int_{\\overline{M}_{0,1}(v, \\beta)} \\mathrm{ev}_{1}^{*}(\\mathrm{p}) &= 1 \\\\
 \\end{aligned}
 ```
 we use the code:
 ```julia-repl
 julia> P = ev(1, a_point(v));
 julia> IntegrateAB(v, beta, 1, P);
+```
+In order to speed up the computation, many equivariant classes of the same moduli space can be vectorized. For example the following two invariants are in the same moduli space.
+```math
+\\begin{aligned}
+\\int_{\\overline{M}_{0,2}(\\mathbb{P}^2, 1)} \\mathrm{ev}_{1}^{*}(\\mathrm{p})\\cdot\\mathrm{ev}_{2}^{*}(\\mathrm{p}) &= 1 \\\\
+\\int_{\\overline{M}_{0,2}(\\mathbb{P}^2, 1)} \\mathrm{ev}_{1}^{*}(\\mathrm{p})\\cdot\\psi_{1}^{1}\\cdot\\psi_{2}^{1} &= -1. \\
+\\end{aligned}
+```
+The best way to compute them is by defining an array `P=[P1,P2]` and compute them together.
+```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
+julia> v = projective_space(NormalToricVariety, 2);
+
+julia> p = a_point(v);
+
+julia> P1 = ev(1, p)*ev(2, p);
+
+julia> P2 = ev(1, p)*Psi([1,1]);
+
+julia> P = [P1,P2];
+
+julia> line = cohomology_class(toric_divisor(v, [1,0,0]));
+
+julia> IntegrateAB(v, line, 2, P, show_bar=false);
+Result number 1: 1
+Result number 2: -1
 ```
 """
 function ev(j::Int64, cc::CohomologyClass)::EquivariantClass

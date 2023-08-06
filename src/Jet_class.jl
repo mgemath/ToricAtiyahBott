@@ -38,7 +38,6 @@ julia> l = toric_line_bundle(v, [k]);
 
 julia> P = ev(1,line)//k*Jet(4*d-2,l);
 
-
 julia> IntegrateAB(v, beta, 1, P, show_bar=false);   #The value of this integral does not depend on k, only on d
 Result: 2
 
