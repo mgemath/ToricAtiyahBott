@@ -1,4 +1,4 @@
-export 
+export
     push_ev
 
 
@@ -42,16 +42,16 @@ function push_ev(l::ToricLineBundle)::EquivariantClass
 
     rule = :(_push_ev(v, od, nc, iv, g, col, weights, marks, $cc))
     # rule = :(_push_ev(v, od, nc, iv, g, col, weights, marks, $l))
-    
-    return EquivariantClass( rule, eval( :((v, od, nc, iv, g, col, weights, marks) -> $rule )))
+
+    return EquivariantClass(rule, eval(:((v, od, nc, iv, g, col, weights, marks) -> $rule)))
 end
 
 # function _push_ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, cc::CohomologyClass, Z::Vector{Tuple{Int64, Matrix{Int64}, Int64}})::T
-function _push_ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, cc::CohomologyClass)::T
+function _push_ev(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, cc::CohomologyClass)::T
     ans = F(1)
-    
+
     # evd = Dict{Int64, T}()
-    
+
     for vert in 1:nv(g)
         # if !(col[vert] in keys(evd))
         #     evd[col[vert]] = _ev(v, od, nc, iv, g, (col[vert], ), weights, (1, ), 1, Z)
@@ -60,17 +60,17 @@ function _push_ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::D
             v.__attrs[:ev_dict][(col[vert], cc)] = just_ev(v, od, nc, col[vert], cc)
         end
 
-        1-length(all_neighbors(g, vert)) == 0 && continue
+        1 - length(all_neighbors(g, vert)) == 0 && continue
         v.__attrs[:ev_dict][(col[vert], cc)] == 0 && return v.__attrs[:ev_dict][(col[vert], cc)]
-        ans *= (v.__attrs[:ev_dict][(col[vert], cc)])^(1-length(all_neighbors(g, vert))) 
+        ans *= (v.__attrs[:ev_dict][(col[vert], cc)])^(1 - length(all_neighbors(g, vert)))
     end
 
     d = Dict(edges(g) .=> weights)
     for e in edges(g)
-        b = Int64( integrate(iv[(col[src(e)], col[dst(e)])]*cc) )
+        b = Int64(integrate(iv[(col[src(e)], col[dst(e)])] * cc))
         b == 0 && continue
         for alph in 0:(b*d[e])
-            ans *= (alph*v.__attrs[:ev_dict][(col[src(e)], cc)]+(b*d[e]-alph)*v.__attrs[:ev_dict][(col[dst(e)], cc)])//(b*d[e])
+            ans *= (alph * v.__attrs[:ev_dict][(col[src(e)], cc)] + (b * d[e] - alph) * v.__attrs[:ev_dict][(col[dst(e)], cc)]) // (b * d[e])
         end
     end
 
@@ -79,17 +79,17 @@ end
 
 function _push_ev(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null::Int64, null2::Int64, null3::Int64, null4::Int64, null5::Int64, cc::CohomologyClass)::Cycle
 
-    inters = integrate(beta*cc)
+    inters = integrate(beta * cc)
     try
         if inters < 0
             error("The push-forward is not a vector bundle")
         end
     catch e
-        printstyled(stderr,"ERROR: ", bold=true, color=:red)
-        printstyled(stderr,sprint(showerror,e), color=:light_red)
+        printstyled(stderr, "ERROR: ", bold=true, color=:red)
+        printstyled(stderr, sprint(showerror, e), color=:light_red)
         println(stderr)
         return error_cycle()
     end
-    
+
     return Cycle(Int64(inters + 1), 0)
 end

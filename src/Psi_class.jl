@@ -1,12 +1,12 @@
 export
     Psi
-    
+
 """
     Psi(a)
 
 Equivariant class of the cycle of ``\\psi``-classes.
 # Arguments
-- `a::Vector{Int64}`: the vector of the exponents of the ``\\psi`` classes. It is ordered, meaning that the first element is the exponent of ``\\psi_1``, the second is the exponent of ``\\psi_2``, and so on. Alternatively, `a` can be a number. In this case it is equivalent to [1,0,0,...,0].
+- `a`: the list of exponents of the ``\\psi`` classes. It is ordered, meaning that the first element is the exponent of ``\\psi_1``, the second is the exponent of ``\\psi_2``, and so on. Alternatively, `a` can be a number. In this case it is equivalent to [1,0,0,...,0].
 
 !!! note
 
@@ -40,7 +40,7 @@ julia> P = ev(1, line)^2*Psi(4);
 julia> IntegrateAB(v, 2*line, 1, P, show_bar=false);
 Result: 1//8
 
-julia> Q = Psi([2,2]);
+julia> Q = Psi(2,2);
 
 julia> IntegrateAB(v, line, 2, Q, show_bar=false);
 Result: 6
@@ -76,20 +76,29 @@ Result: -5//16
     ```
 """
 function Psi(a)::EquivariantClass
-    
+
     rule = :(_Psi(v, od, nc, iv, g, col, weights, marks, $a))
-    return EquivariantClass( rule, eval( :((v, od, nc, iv, g, col, weights, marks) -> $rule )))
+    return EquivariantClass(rule, eval(:((v, od, nc, iv, g, col, weights, marks) -> $rule)))
 end
 
-function _Psi(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, a::Int64)::T
+function Psi(a::Int...)::EquivariantClass
+
+    rule = :(_Psi(v, od, nc, iv, g, col, weights, marks, $a))
+    return EquivariantClass(rule, eval(:((v, od, nc, iv, g, col, weights, marks) -> $rule)))
+end
+
+function _Psi(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, a::Int64...)::T
     return _Psi(v, od, nc, iv, g, col, weights, marks, [a])
 end
 
+function _Psi(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, a::Tuple{Vararg{Int64}})::T
+    return _Psi(v, od, nc, iv, g, col, weights, marks, [a...])
+end
 
-function _Psi(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, a::Vector{Int64})::T
+function _Psi(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, a::Vector{Int64})::T
 
-    findfirst(x -> x>0, a) === nothing && return F(1) #if all of them are zero or a is empty
-    
+    findfirst(x -> x > 0, a) === nothing && return F(1) #if all of them are zero or a is empty
+
     ans = F(1)
 
     # local q1::fmpq = fmpq(1)
@@ -97,11 +106,11 @@ function _Psi(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{
     local Sum_ai::Int64
     local n::Int64
     local M::Int64
-    local d = Dict(edges(g).=> weights) #assign weights to edges
+    local d = Dict(edges(g) .=> weights) #assign weights to edges
     local inv_marks::Dict{Int64,Vector{Int64}} = invert_marks(marks, nv(g))
-    
+
     for v in 1:nv(g)
-        
+
         a_v = Int64[]
         for i in inv_marks[v]
             (i > length(a) || a[i] == 0) && continue
@@ -112,57 +121,57 @@ function _Psi(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{
         Sum_ai == 0 && continue #if S contains only zeros, or it is empty, continue
 
         n = length(all_neighbors(g, v)) + length(inv_marks[v])
-        
+
         n > 2 && Sum_ai > n - 3 && return F(0)
-        
+
         #If no previous condition holds, then n>1
         if n == 2 #necessary |S_v| == 1
             M = (-1)^a_v[1]
         else # n>2 and Sum_ai <= n - 3
             M = multinomial((n - 3 - Sum_ai, a_v...,))
         end
-        
+
 
         local s1 = F(0)
-        
+
         for w in all_neighbors(g, v)
-            s1 += d[Edge(max(v,w),min(v,w))]//od[col[v],col[w]]
+            s1 += d[Edge(max(v, w), min(v, w))] // od[col[v], col[w]]
         end
-        ans *= M*(s1^(-Sum_ai))
+        ans *= M * (s1^(-Sum_ai))
     end
-        
+
     return ans
 end
 
 function _Psi(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null::Int64, null2::Int64, null3::Int64, null4::Int64, null5::Int64, a::Int64)::Cycle
-    
+
     try
         a < 0 && error(string("exponents of psi classes must be nonnegative, correct ", a))
     catch e
-        printstyled(stderr,"ERROR: ", bold=true, color=:red)
-        printstyled(stderr,sprint(showerror,e), color=:light_red)
+        printstyled(stderr, "ERROR: ", bold=true, color=:red)
+        printstyled(stderr, sprint(showerror, e), color=:light_red)
         println(stderr)
         return error_cycle()
     end
-    psi_deg = a==0 ? 0 : 1
+    psi_deg = a == 0 ? 0 : 1
 
     return Cycle(a, psi_deg)
 end
 
-function _Psi(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null::Int64, null2::Int64, null3::Int64, null4::Int64, null5::Int64, a::Vector{Int64})::Cycle
-    
-    try
-        length(a) > n_marks && error(string("size of ",a," is greater than ",n_marks))
+function _Psi(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null::Int64, null2::Int64, null3::Int64, null4::Int64, null5::Int64, a::Union{Vector{Int64},Tuple{Vararg{Int64}}})::Cycle
 
-        if findfirst(x -> x<0, a) !== nothing #if some of them is negative
+    try
+        length(a) > n_marks && error(string("size of ", a, " is greater than ", n_marks))
+
+        if findfirst(x -> x < 0, a) !== nothing #if some of them is negative
             error(string("exponents of psi classes must be nonnegative, correct ", a))
         end
     catch e
-        printstyled(stderr,"ERROR: ", bold=true, color=:red)
-        printstyled(stderr,sprint(showerror,e), color=:light_red)
+        printstyled(stderr, "ERROR: ", bold=true, color=:red)
+        printstyled(stderr, sprint(showerror, e), color=:light_red)
         println(stderr)
         return error_cycle()
     end
-    psi_deg = sum(a)==0 ? 0 : 1
+    psi_deg = sum(a) == 0 ? 0 : 1
     return Cycle(sum(a), psi_deg)
 end

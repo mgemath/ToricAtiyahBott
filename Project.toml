@@ -1,7 +1,7 @@
 name = "ToricAtiyahBott"
 uuid = "72dfc14a-8332-4639-b9f3-8b017b604ecf"
 authors = ["Giosuè Muratore <muratore.g.e@gmail.com >"]
-version = "0.9.3"
+version = "1.0.0"
 
 [deps]
 Oscar = "f1435218-dba5-11e9-1e4d-f1a5fab5fc13"
@@ -9,6 +9,6 @@ ProgressMeter = "92933f4c-e287-5a05-a399-4b506db050ca"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 
 [compat]
-Oscar = "0.12.1"
+Oscar = "0.13.0"
 ProgressMeter = "1.7.2"
 julia = "1.9"

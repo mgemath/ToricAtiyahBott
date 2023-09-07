@@ -1,4 +1,4 @@
-export 
+export
     ev
 
 """
@@ -97,17 +97,17 @@ Result number 2: -1
 ```
 """
 function ev(j::Int64, cc::CohomologyClass)::EquivariantClass
-    
+
     rule = :(_ev(v, od, nc, iv, g, col, weights, marks, $j, $cc))
-    return EquivariantClass( rule, eval( :((v, od, nc, iv, g, col, weights, marks) -> $rule )))
+    return EquivariantClass(rule, eval(:((v, od, nc, iv, g, col, weights, marks) -> $rule)))
 end
 
 function ev(j::Int64, l::ToricLineBundle)::EquivariantClass
-    
+
     return ev(j, cohomology_class(l))
 end
 
-function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, cc::CohomologyClass)::T
+function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, cc::CohomologyClass)::T
 
     length(marks) == 0 && return F(1)
     if (col[marks[j]], cc) in keys(v.__attrs[:ev_dict])
@@ -119,12 +119,12 @@ function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{I
     return v.__attrs[:ev_dict][(col[marks[j]], cc)]
 end
 
-function just_ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Dict{Int64, Vector{Int64}}, col_vert::Int64, cc::CohomologyClass)::T
-    
+function just_ev(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, col_vert::Int64, cc::CohomologyClass)::T
+
     SPLIT = split_cc(cc)
-    Z = [(i, Int64.(exponents(SPLIT[i])[1,:]), Oscar.coefficients(SPLIT[i])[1]) for i in eachindex(SPLIT)]
+    Z = [(i, Int64.(exponents(SPLIT[i])[1, :]), Oscar.coefficients(SPLIT[i])[1]) for i in eachindex(SPLIT)]
     ans = [F(1) for _ in 1:length(Z)]
- 
+
     for (i, e, coef) in Z
         for (k, ray) in enumerate(rays(v))
             e[k] == 0 && continue
@@ -143,11 +143,11 @@ function just_ev(v::NormalToricVariety, od::Dict{Tuple{Int64, Int64}, T}, nc::Di
                 break
             end
         end
-        
+
         # mul!(ans[i], ans[i], coef)
         ans[i] *= coef
     end
-    
+
     # println("col: ", col_vert, "  ", ans[1])
     return sum(ans)
 end
@@ -156,7 +156,7 @@ end
 function _ev(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null::Int64, null2::Int64, null3::Int64, null4::Int64, null5::Int64, j::Int64, cc::CohomologyClass)::Cycle
 
     SPLIT = split_cc(cc)
-    Z = [(i, Int64.(exponents(SPLIT[i])[1,:]), Oscar.coefficients(SPLIT[i])[1]) for i in eachindex(SPLIT)]
+    Z = [(i, Int64.(exponents(SPLIT[i])[1, :]), Oscar.coefficients(SPLIT[i])[1]) for i in eachindex(SPLIT)]
 
     try
         if !all(i -> sum(Z[1][2]) == sum(Z[i][2]), eachindex(Z)) #!ishomogeneous(polynomial(Z))
@@ -166,11 +166,11 @@ function _ev(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null:
             error(string("ev requires a positive integer between 1 and ", n_marks, ", correct ", j))
         end
     catch e
-        printstyled(stderr,"ERROR: ", bold=true, color=:red)
-        printstyled(stderr,sprint(showerror,e), color=:light_red)
+        printstyled(stderr, "ERROR: ", bold=true, color=:red)
+        printstyled(stderr, sprint(showerror, e), color=:light_red)
         println(stderr)
         return error_cycle()
     end
-    
+
     return Cycle(sum(Z[1][2]), 0)
 end

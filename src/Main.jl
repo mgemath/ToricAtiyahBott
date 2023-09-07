@@ -1,7 +1,8 @@
-export 
+export
     IntegrateAB
 
-T = QQFieldElem; F = T  # This line is useful to fix the arithmetic of the numbers. T is the type we use, and F is a function that returns the numbers 0 and 1 to the same type as T.
+T = QQFieldElem;
+F = T;  # This line is useful to fix the arithmetic of the numbers. T is the type we use, and F is a function that returns the numbers 0 and 1 to the same type as T.
 
 """
     IntegrateAB(v, beta, m, P; do_check, show_bar)
@@ -38,27 +39,27 @@ More examples are available in the support of the equivariant classes. It is eno
 
 To add more classes, please contact the authors.
 """
-function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, P_input; do_check::Bool = true, show_bar::Bool = true)::Union{Vector{T},Nothing}
-    
-    if !issmooth(v)
+function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, P_input; do_check::Bool=true, show_bar::Bool=true)::Union{Vector{T},Nothing}
+
+    if !is_smooth(v)
         printstyled("ERROR: ", bold=true, color=:red)
         println("The variety must be smooth")
         return nothing
     end
 
-    if !isprojective(v)
+    if !is_projective(v)
         printstyled("ERROR: ", bold=true, color=:red)
         println("The variety must be projective")
         return nothing
     end
 
-    if !ishomogeneous(polynomial(beta))
+    if !is_homogeneous(polynomial(beta))
         printstyled("ERROR: ", bold=true, color=:red)
         println("The class of the curve is not homogeneous")
         return nothing
     end
 
-    if degree(Int64, polynomial(beta)) != dim(v)-1
+    if degree(Int64, polynomial(beta)) != dim(v) - 1
         printstyled("ERROR: ", bold=true, color=:red)
         println("The class is not the class of a curve")
         return nothing
@@ -76,13 +77,13 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
     nc = neighbors_cones(v)
     od = omega_dict(v, nc, s)
     d = get_inv_curve(v, nc)
-    otd::Dict{Int64, T} = Dict{Int64, T}() # omega_total dict
+    otd::Dict{Int64,T} = Dict{Int64,T}() # omega_total dict
     for i in 1:n_maximal_cones(v)
         otd[i] = omega_total(od, nc, i)
     end
 
-    v.__attrs[:ev_dict] = Dict{Tuple{Int64, CohomologyClass}, T}()
-    
+    v.__attrs[:ev_dict] = Dict{Tuple{Int64,CohomologyClass},T}()
+
     local n_results::Int64 = 1
 
     if isa(P_input, Array)
@@ -90,7 +91,7 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
     end
 
     local P::Vector{Function} = Vector{Function}(undef, n_results)
-    
+
     if isa(P_input, Array)
         for i in eachindex(P)
             P[i] = P_input[i].func
@@ -98,22 +99,23 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
     else
         P[1] = P_input.func
     end
-    
+
     if do_check && !is_zero_cycle(v, beta, n_marks, P)
         return nothing
     end
-    
+
+    local result::Vector{T} = [F(0) for _ in 1:n_results]
     # local result::Vector{Vector{T}} = [[F(0) for _ in 1:n_results] for _ in 1:Threads.nthreads()]
-    local result::Array{T,2} = Array{T,2}(undef, Threads.nthreads(), n_results)
-    fill!(result, F(0))
+    # local result::Array{T,2} = Array{T,2}(undef, Threads.nthreads(), n_results)
+    # fill!(result, F(0))
     local partial_res::Vector{T} = [F(0) for _ in 1:1:n_results]
 
     E = F(0)
-    
-    max_n_vert = mapreduce(D -> Int64(integrate(D*beta)), +, NEF, init=1)
+
+    max_n_vert = mapreduce(D -> Int64(integrate(D * beta)), +, NEF, init=1)
     if show_bar #set up progress data
         number_trees = A000055(max_n_vert)
-        threshold = sum(vert -> number_trees[vert]*(n_maximal_cones(v))*((length(nc[1]))^(vert-1))*(vert^n_marks), 2:max_n_vert)
+        threshold = sum(vert -> number_trees[vert] * (n_maximal_cones(v)) * ((length(nc[1]))^(vert - 1)) * (vert^n_marks), 2:max_n_vert)
         progress_bar::Progress = Progress(threshold, barglyphs=BarGlyphs("[=> ]"), color=:green)
         current_graph::Threads.Atomic{Int64} = Threads.Atomic{Int}(0)
     end
@@ -127,11 +129,11 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
         CI = ColorsIt(ls, n_maximal_cones(v), rev_dfs, parents, has_ci, subgraph_ends_rev, subgraph_ends, left_siblings)
         for col in Iterators.filter(c -> is_admissible_color(nc, g, c), CI)
             top_aut::Int64 = count_iso(ls, col)
-            
+
             local store_aut::Dict{Vector{Int64},Int64} = Dict{Vector{Int64},Int64}()
             local temp_m::Vector{Int64}
             local aut::Int64
-                
+
             MULTI = collect(multip(Ms(v, NEF, g, col, d, beta)))
 
             for m in Base.Iterators.filter(m -> top_aut == 1 || isempty(m) || maximum(m) < 3 || ismin(ls, col, m, parents, subgraph_ends), Base.Iterators.product(repeat([1:nv(g)], n_marks)...))
@@ -141,43 +143,44 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
                     store_aut[temp_m] = count_iso(ls, col, m)
                 end
                 aut = store_aut[temp_m]
-                
+
                 for w in MULTI
                     for res in eachindex(partial_res)
                         partial_res[res] = Base.invokelatest(P[res], v, od, nc, d, g, col, w, m)
                     end
 
                     all(res -> partial_res[res] == F(0), eachindex(partial_res)) && continue # check if at least
-                    
-                    E = Euler_inv(v, od, nc, otd, d, g, col, w, m)//(aut*prod(w))
+
+                    E = Euler_inv(v, od, nc, otd, d, g, col, w, m) // (aut * prod(w))
 
                     for res in eachindex(partial_res)      # compute each term of the array P
                         partial_res[res] *= E
+                        result[res] += partial_res[res]
                         # mul!(partial_res[res], partial_res[res], E)
-                        result[Threads.threadid(), res] += partial_res[res]
+                        # result[Threads.threadid(), res] += partial_res[res]
                         # add!(result[Threads.threadid(), res], result[Threads.threadid(), res], partial_res[res])
                     end
 
                 end
                 if show_bar #update the progress bar
-                    Threads.atomic_add!(current_graph, tree_aut÷aut)
+                    Threads.atomic_add!(current_graph, tree_aut ÷ aut)
                     # Threads.lock(l)
                     update!(progress_bar, current_graph[],
-                            showvalues = [(:"Total number of graphs",threshold),(:"Current graph",current_graph[])])
+                        showvalues=[(:"Total number of graphs", threshold), (:"Current graph", current_graph[])])
                     # Threads.unlock(l)
                 end
-                
+
             end
         end
 
     end
-    
+
     if n_results == 1
-        println("Result: ", result[1, 1])
-    else 
+        println("Result: ", result[1])
+    else
         for res in 1:n_results
-            println("Result number ", res, ": ", result[1, res])
+            println("Result number ", res, ": ", result[res])
         end
     end
-    return result[1,:]
+    return result[:]
 end

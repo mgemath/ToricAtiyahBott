@@ -42,7 +42,6 @@ vir_dim_M
 codimension
 is_zero_cycle
 a_point
-proj
 moment_graph
 ```
 

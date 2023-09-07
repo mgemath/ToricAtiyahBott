@@ -1,4 +1,4 @@
-export 
+export
     codimension,
     vir_dim_M,
     is_zero_cycle
@@ -25,9 +25,9 @@ julia> vir_dim_M(v,beta,0)
 2
 ```
 """
-function vir_dim_M(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64 = 0)::Int64
-    
-    return dim(v) - 3 - Int64(integrate(cohomology_class(canonical_divisor(v))*beta)) + n_marks
+function vir_dim_M(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64=0)::Int64
+
+    return dim(v) - 3 - Int64(integrate(cohomology_class(canonical_divisor(v)) * beta)) + n_marks
 end
 
 """
@@ -41,8 +41,8 @@ The codimension of the equivariant class `P`.
 - `P`: the equivariant class.
 """
 function codimension(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, P)::Int64
-    
-    return Base.invokelatest( P.func, v, beta, n_marks, 0, 0, 0, 0, 0).c
+
+    return Base.invokelatest(P.func, v, beta, n_marks, 0, 0, 0, 0, 0).c
 end
 
 """
@@ -66,7 +66,7 @@ function is_zero_cycle(v::NormalToricVariety, beta::CohomologyClass, n_marks::In
         #P = [P]
     end
     local P::Vector{Function} = Vector(undef, n_results)
-    
+
     if isa(P_input, Array)  #we want that P is an array, possibly with only one element
         if typeof(P_input[1]) == EquivariantClass
             for res in eachindex(P)
@@ -84,7 +84,7 @@ function is_zero_cycle(v::NormalToricVariety, beta::CohomologyClass, n_marks::In
     end
 
     for res in eachindex(P)
-        local P_cycle = Base.invokelatest( P[res], v, beta, n_marks, 0, 0, 0, 0, 0)
+        local P_cycle = Base.invokelatest(P[res], v, beta, n_marks, 0, 0, 0, 0, 0)
 
         if !P_cycle.valid
             printstyled("Warning: ", bold=true, color=:light_yellow)
@@ -103,7 +103,7 @@ function is_zero_cycle(v::NormalToricVariety, beta::CohomologyClass, n_marks::In
 
         if P_cycle.c != vir_dim_M(v, beta, n_marks)
             printstyled("Warning: ", bold=true, color=:light_yellow)
-            length(P)==1 ? println("the class is not a zero cycle") : println("some classes are not zero cycles")
+            length(P) == 1 ? println("the class is not a zero cycle") : println("some classes are not zero cycles")
             return false
         end
     end
@@ -123,7 +123,7 @@ function split_cc(c::CohomologyClass)::Vector{CohomologyClass}
     expos = matrix(ZZ, [k for k in AbstractAlgebra.exponent_vectors(p.f)])
     indets = gens(cohomology_ring(toric_variety(c)))
     monoms = [prod(cohomology_class(v, indets[j])^expos[k, j] for j in 1:ncols(expos)) for k in 1:nrows(expos)]
-    return [coeffs[k]*monoms[k] for k in eachindex(monoms)]
+    return [coeffs[k] * monoms[k] for k in eachindex(monoms)]
 end
 
 struct Cycle #We define the structure Cycle. It keeps track of the codimension and of the fact that it contains psi-classes
@@ -144,23 +144,23 @@ end
 #So the Cycle(-1, 0) is a meaningless cycle.
 
 *(P1::Cycle, P2::Cycle)::Cycle = Cycle(P1.c + P2.c, P1.is_psi + P2.is_psi, P1.valid && P2.valid)
-^(P1::Cycle, n::Int64) ::Cycle = Cycle(n*P1.c, n*P1.is_psi, P1.valid) #if n=0, we got a zero cycle
+^(P1::Cycle, n::Int64)::Cycle = Cycle(n * P1.c, n * P1.is_psi, P1.valid) #if n=0, we got a zero cycle
 +(P1::Cycle, P2::Cycle)::Cycle = P1.c == P2.c ? Cycle(P1.c, max(P1.is_psi, P2.is_psi), P1.valid && P2.valid) : error_cycle()
 -(P1::Cycle, P2::Cycle)::Cycle = +(P1, P2)
-*(P1::Cycle, ::Number) ::Cycle = P1
-*(::Number, P1::Cycle) ::Cycle = P1
+*(P1::Cycle, ::Number)::Cycle = P1
+*(::Number, P1::Cycle)::Cycle = P1
 //(P1::Cycle, ::Number)::Cycle = P1
 //(::Number, P1::Cycle)::Cycle = Cycle(-P1.c, -P1.is_psi, P1.valid)
-/(P1::Cycle, ::Number) ::Cycle = P1
-/(::Number, P1::Cycle) ::Cycle = Cycle(-P1.c, -P1.is_psi, P1.valid)
+/(P1::Cycle, ::Number)::Cycle = P1
+/(::Number, P1::Cycle)::Cycle = Cycle(-P1.c, -P1.is_psi, P1.valid)
 +(P1::Cycle, n::Number)::Cycle = n == 0 ? P1 : error_cycle()
 -(P1::Cycle, n::Number)::Cycle = +(P1, n)
 +(n::Number, P1::Cycle)::Cycle = +(P1, n)
 -(n::Number, P1::Cycle)::Cycle = +(P1, n)
 # +(P1::Cycle)           ::Cycle = P1
 # -(P1::Cycle)           ::Cycle = P1
-//(P1::Cycle,P2::Cycle)::Cycle = Cycle(P1.c-P2.c, P1.is_psi-P2.is_psi, P1.valid && P2.valid)
+//(P1::Cycle, P2::Cycle)::Cycle = Cycle(P1.c - P2.c, P1.is_psi - P2.is_psi, P1.valid && P2.valid)
 /(P1::Cycle, P2::Cycle)::Cycle = //(P1, P2)
-one(::Cycle)           ::Cycle = Cycle(0, 0, true)
-inv(P1::Cycle)         ::Cycle = Cycle(-P1.c, -P1.is_psi, P1.valid)
-zero(::Cycle)          ::Int64 = 0
+one(::Cycle)::Cycle = Cycle(0, 0, true)
+inv(P1::Cycle)::Cycle = Cycle(-P1.c, -P1.is_psi, P1.valid)
+zero(::Cycle)::Int64 = 0

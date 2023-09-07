@@ -1,8 +1,8 @@
 function invert_marks(mark::Tuple{Vararg{Int64}}, n_vert::Int64)::Dict{Int64,Vector{Int64}}
-    
+
     D = Dict{Int64,Vector{Int64}}([v for v in 1:n_vert] .=> [Int64[] for _ in 1:n_vert])
 
-    foreach(t -> push!(D[mark[t]], t) , eachindex(mark))
+    foreach(t -> push!(D[mark[t]], t), eachindex(mark))
 
     return D
 end
@@ -17,10 +17,10 @@ end
 function ismin(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int64}}, par::Vector{Int64}, sub_end::Vector{Int64})::Bool
 
     marks = sort(unique(m))
-    
+
     for j in marks # eachindex(marks)
         # find the all the left vertex with the same depth
-        for k in findall(i -> (i<j) && ls[i] == ls[j] && col[i] == col[j] && ls[sub_end[i]] == ls[sub_end[j]], eachindex(ls))
+        for k in findall(i -> (i < j) && ls[i] == ls[j] && col[i] == col[j] && ls[sub_end[i]] == ls[sub_end[j]], eachindex(ls))
             # k = findlast(i -> (i<j) && ls[i] == ls[j], 1:n)
 
             # if there is no such vertex, then this particular j is minimal
@@ -28,7 +28,7 @@ function ismin(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int
 
             # if both have marks, then this particular j is minimal
             # k in marks && continue
-            
+
             # necessary conditions for an automorphism
             # ls[sub_end[k]] != ls[sub_end[j]] && continue
             # ls[subgraph_ends[k]] != ls[subgraph_ends[j]] && continue
@@ -41,7 +41,7 @@ function ismin(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int
             par_j::Int64 = copy(j)
             par_k::Int64 = copy(k)
             root_k::Int64 = 0
-            root_j::Int64 = 0 
+            root_j::Int64 = 0
 
             while par_k != par_j
                 root_k = par_k
@@ -58,25 +58,29 @@ function ismin(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int
 
             if view(ls, indeces_k) == view(ls, indeces_j)  # check if the two subtrees are isomorphic
                 if col[indeces_k] == col[indeces_j] # check if the colorations are preserved
-                    for (x,y) in Base.Iterators.zip(indeces_k,indeces_j)
+                    for (x, y) in Base.Iterators.zip(indeces_k, indeces_j)
                         if !(x in marks) && !(y in marks)
                             continue
                         end
 
                         dim_dif = 0 #num_marks(m,y) - num_marks(m,x)
                         for i in m
-                            if i == y dim_dif += 1 end
-                            if i == x dim_dif -= 1 end
+                            if i == y
+                                dim_dif += 1
+                            end
+                            if i == x
+                                dim_dif -= 1
+                            end
                         end
 
                         if dim_dif > 0
                             return false
                         end
-                        
+
                         # so num_marks(m,y) == num_marks(m,x)
                         # findfirst(i-> i == x, m) is the minimum of all marks pointing at x
                         if dim_dif == 0
-                            if findfirst(i-> i == y, m) < findfirst(i-> i == x, m)
+                            if findfirst(i -> i == y, m) < findfirst(i -> i == x, m)
                                 return false
                             end
                         end

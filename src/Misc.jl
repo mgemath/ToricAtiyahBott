@@ -15,10 +15,10 @@ function a_point(v::NormalToricVariety)::CohomologyClass
 end
 
 function multinomial(tup::Tuple{Vararg{Int64}})::Int64
-    
+
     SUM::Int64 = 0
     ans::Int64 = 1
-    
+
     @inbounds for i in tup
         SUM += i
         ans *= binomial(SUM, i)
@@ -35,12 +35,12 @@ function stirling_tuple(n::Int64)::Tuple{Vararg{Int64}}
             if j == i
                 dp[i, j] = 1
             elseif j == 1
-                dp[i, j] = factorial(i-1)
+                dp[i, j] = factorial(i - 1)
             else
-                dp[i, j] = dp[i-1, j-1] + (i-1) * dp[i-1, j]
+                dp[i, j] = dp[i-1, j-1] + (i - 1) * dp[i-1, j]
             end
         end
     end
 
-    return (dp[n,:]...,)
+    return (dp[n, :]...,)
 end
