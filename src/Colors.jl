@@ -1,6 +1,6 @@
-struct ColorsIt
+struct col_it
     ls::Vector{Int64}
-    max_col::Int64
+    col_dict::Dict{Int64,Vector{Int64}}
     rev_dfs::Vector{Int64}
     parents::Vector{Int64}
     has_ci::Bool
@@ -9,32 +9,44 @@ struct ColorsIt
     left_siblings::Vector{Int64}
 end
 
-function Base.iterate(CI::ColorsIt, col::Vector{Int64}=Int64[])::Union{Nothing,Tuple{NTuple{length(CI.ls),Int64},Vector{Int64}}}
+function col_it_init(ls::Vector{Int64}, col_dict::Dict{Int64,Vector{Int64}})
 
-    if isempty(col)
-        c::Vector{Int64} = my_minimal_coloring(CI.ls)
-        # return ntuple(i -> c[i], length(c)), (init_ColorsIt(CI.ls), c)
-        return (c...,), c
+    n::Int64 = length(ls)
+
+    par::Vector{Int64} = [0 for _ in 1:n]
+
+    foreach(v -> par[v] = findlast(i -> i < v && ls[i] == ls[v] - 1, eachindex(ls)), 2:n)
+
+    stack::Vector{Int64} = [1]
+    rev_dfs::Vector{Int64} = []
+    v::Int64 = 0
+    while length(stack) > 0
+        v = pop!(stack)
+        push!(rev_dfs, v)
+        append!(stack, findall(x -> par[x] == v, 1:n))
     end
 
-    # ((rev_dfs, parents, has_ci, subgraph_ends_rev, subgraph_ends, left_siblings, n), col) = state
+    sub_end = [my_end_of_subgraph(ls, x) for x in 1:n]
 
-    # col::Vector{Int64} = copy(state)
+    return col_it(ls, col_dict,
+        rev_dfs, # reverse_dfs
+        par, # parents
+        my_has_central_involution(ls), # has_ci
+        [end_of_subgraph_rev(ls, rev_dfs, x) for x in 1:n], # ends_of_subgraphs_rev
+        sub_end, # ends_of_subgraphs
+        [my_root_of_left_sibling_subtree(par, x) for x in 1:n] # left_siblings    
+    ), par, sub_end
 
-    # has_ci::Bool = get_prop( g, :has_ci )
+end
 
-    # # set up the maximum color, number of vertices, and the parents for the vertices
-    # n::Int64 = length( ls )
-    # parents::Vector{Int64} = get_prop( g, :parents )
+function Base.iterate(CI::col_it, col::Vector{Int64}=Int64[])
 
-    # # set up the reverse dfs order for the vertices, the end of subgtrees originating from each vertex and 
-    # # the left siblings of each vertices
-    # rev_dfs::Vector{Int64} = get_prop( g, :reverse_dfs )
-    # subgraph_ends::Vector{Int64} = get_prop( g, :ends_of_subgraphs )
-    # subgraph_ends_rev::Vector{Int64} = get_prop( g, :ends_of_subgraphs_rev )
-    # left_siblings::Vector{Int64} = get_prop( g, :left_siblings )
+    if isempty(col)
+        c::Vector{Int64} = first_coloring(CI.ls, CI.col_dict) 
+        return (c...,), c #otherwise (c...,), c
+    end
 
-
+ 
     #=
         A vertex is colorable if it hasn't reached its maximum possible color.
 
@@ -81,17 +93,15 @@ function Base.iterate(CI::ColorsIt, col::Vector{Int64}=Int64[])::Union{Nothing,T
         end
 
         # we decide if the color of v can be increased
-        if col[v] < CI.max_col - 1
-            # we update colorable if necessary 
+
+        # count_if_increaseble = count(i -> i > col[v], CI.col_dict[col[CI.parents[v]]])
+        if col[v] < CI.col_dict[col[CI.parents[v]]][end]
+        # if (col[v] < CI.max_col - 1) || (col[v] == CI.max_col - 1 && col[CI.parents[v]] != CI.max_col)
+            # we update colorable if necessary
             if colorable < v
                 colorable = v
             end
-            #we update look_end 
-            look_end = v_end_rev
-        elseif col[v] == CI.max_col - 1 && col[CI.parents[v]] != CI.max_col
-            if colorable < v
-                colorable = v
-            end
+            #we update look_end
             look_end = v_end_rev
         end
 
@@ -103,120 +113,73 @@ function Base.iterate(CI::ColorsIt, col::Vector{Int64}=Int64[])::Union{Nothing,T
         k += 1
     end
 
-    # check if one is colorable 
-    colorable_1::Bool = CI.has_ci ? col[1] < CI.max_col - 1 : col[1] < CI.max_col
-
-    # if did not find colorable vertex then return nothing
-    if colorable == 0
-        if colorable_1
-            colorable = 1
+    if colorable == 0 # if all vertices >1 are not colorable
+        new_root_color = 0  # if necessary, we need to increase the color of ls[1]
+        if CI.has_ci # if g has the bad automorphism
+            for c in (col[1]+1):maximum(keys(CI.col_dict))#CI.max_col # find the first color, greater than col[1], which is not maximal among its companion colors
+                if c < CI.col_dict[c][end]
+                    new_root_color = c
+                    break
+                end
+            end
         else
-            return nothing
+            if col[1] < maximum(keys(CI.col_dict))#CI.max_col  # if g has not the bad automorphism, we can increase col[1] safely by 1
+                new_root_color = col[1] + 1
+            end
         end
-    end
 
-    # if colorable == 0 && !colorable_1 
-    #     return nothing 
-    # elseif colorable == 0 
-    #     colorable = 1
-    # end
-
-    if colorable != 1 && col[CI.parents[colorable]] == col[colorable] + 1
-        # the parent of v already has color col[v] + 1 and so we increase color by two
-        col[colorable] += 2
+        if new_root_color == 0 # none of the above conditions is satisfied, then we cannot incrase the coloration
+            return nothing
+        else
+            col[1] = new_root_color  # we increase the color of ls[1]
+            colorable = 1
+        end
     else
-        # else we increase the color by one
-        col[colorable] += 1
+        col[colorable] = next_color(CI, col, colorable)
     end
 
+    
     # we reset the coloring of each subtree on the right side of v
     # starting from v+1
 
     j::Int64 = colorable + 1
     while j <= length(CI.ls)
-        root_color::Int64 = 0
+        color_j = (CI.has_ci && j == 2) ? CI.col_dict[col[1]][findfirst(i -> i > col[1], CI.col_dict[col[1]])] : CI.col_dict[col[CI.parents[j]]][1]
 
         # find the end of the subtreee T_j stemming from vertex j
         es::Int64 = CI.subgraph_ends[j]
 
-        # determine the color for the root j of this subtree
-        if CI.has_ci && j == 2
-            # if has central involution and j is vertex two, then its color
-            # is set to the color of vertex 1 plus 1 
-            root_color = col[1] + 1
-            # else 
-            #     # else no constaint on root color
-            #     root_color = 0
-        end
-
         # compute the minimal coloring for the subtree T_j
         # with parent color being the color of parent[j]
-        col[j:es] = my_minimal_coloring(CI.ls[j:es], parent_color=col[CI.parents[j]], root_color=root_color)
-
+        col[j:es] = first_coloring(CI.ls[j:es], CI.col_dict, color_j)
+        # col[j:es] = my_minimal_coloring2(CI.ls[j:es], CI.col_dict, parent_color=col[CI.parents[j]], root_color=root_color)
         # the following subtree that needs to be dealt with stems from the end of T_j plus 1 
         j = es + 1
     end
 
     # return the coloring computed
-    return (col...,), col# new_col, ((rev_dfs, parents, has_ci, subgraph_ends_rev, subgraph_ends, left_siblings, n), col)# (g, col)
+    return (col...,), col
+
 end
+
+function first_coloring(ls::Vector{Int64}, col_dict::Dict{Int64,Vector{Int64}}, color_root::Int64 = 1)::Vector{Int64}
+    
+    ans::Vector{Int64} = [color_root for _ in eachindex(ls)]
+    
+    for i in 2:length(ls)
+        level_up = findfirst(k -> ls[k] == ls[i] - 1, 1:(i-1))
+        ans[i] = col_dict[ans[level_up]][1]
+    end
+
+    return ans
+end
+
+function next_color(CI::col_it, col::Vector{Int64}, v::Int64)
+    return CI.col_dict[col[CI.parents[v]]][findfirst(i -> i > col[v], CI.col_dict[col[CI.parents[v]]])]
+end
+
 
 #########AUX FUNCTIONS#######
-
-function init_ColorsIt(ls::Vector{Int64})::Tuple
-
-    n::Int64 = length(ls)
-
-    par::Vector{Int64} = [0 for _ in 1:n]
-
-    foreach(v -> par[v] = findlast(i -> i < v && ls[i] == ls[v] - 1, eachindex(ls)), 2:n)
-
-    stack::Vector{Int64} = [1]
-    rev_dfs::Vector{Int64} = []
-    v::Int64 = 0
-    while length(stack) > 0
-        v = pop!(stack)
-        push!(rev_dfs, v)
-        append!(stack, findall(x -> par[x] == v, 1:n))
-    end
-
-    ans = (
-        rev_dfs, # reverse_dfs
-        par, # parents
-        my_has_central_involution(ls), # has_ci
-        [end_of_subgraph_rev(ls, rev_dfs, x) for x in 1:n], # ends_of_subgraphs_rev
-        [my_end_of_subgraph(ls, x) for x in 1:n], # ends_of_subgraphs
-        [my_root_of_left_sibling_subtree(par, x) for x in 1:n] # left_siblings    
-    )
-
-    return ans
-end
-
-function my_minimal_coloring(ls::Vector{Int64}; parent_color::Int64=0, root_color::Int64=0)::Vector{Int64}#::NTuple{length(ls), Int64}
-
-    # choose the root color
-
-    if root_color == 0
-        if parent_color == 0
-            root_color = 1
-        else
-            root_color = parent_color == 1 ? 2 : 1
-        end
-    end
-
-    if (root_color == 1) == isodd(ls[1])
-        col_pair = (2, 1) # = col_even, col_odd
-    else
-        col_pair = (1, 2)
-    end
-
-    ans::Vector{Int64} = [col_pair[(ls[i]%2)+1] for i in eachindex(ls)]
-    # for NTuple use ans::NTuple{length(ls),Int64} = col_pair[(ls .% 2) .+ 1] 
-
-    ans[1] = root_color
-
-    return ans
-end
 
 function my_root_of_left_sibling_subtree(par::Vector{Int64}, v::Int64)::Int64
 
@@ -287,8 +250,8 @@ end
 
 ######Of Iterators#########
 
-function Base.eltype(CI::ColorsIt)
-    NTuple{length(CI.ls),Int64}
+function Base.eltype(CI::col_it)
+    NTuple{length(CI.ls), Int64}
 end
 -
 ### this function counts the isomorphisms of a tree with level sequence ls. Optionally, the tree can be colored with coloration col

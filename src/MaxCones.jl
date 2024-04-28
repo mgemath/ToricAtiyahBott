@@ -9,20 +9,17 @@ function neighbors_cones(v::NormalToricVariety)::Dict{Int64,Vector{Int64}}
 
     for sigma1 in 1:(len-1)
         for sigma2 in (sigma1+1):len
-
-            dim(intersect(maximal_cones(v)[sigma1], maximal_cones(v)[sigma2])) != (dim(v) - 1) && continue
+            count(x -> x in rays(maximal_cones(v)[sigma1]), rays(maximal_cones(v)[sigma2])) != (dim(v) - 1) && continue
             push!(ans[sigma1], sigma2)
             push!(ans[sigma2], sigma1)
 
         end
     end
 
+    #order the elements
+    foreach(sigma1 -> sort!(ans[sigma1]), 1:len)
+    
     return ans
-end
-
-function is_admissible_color(nc::Dict{Int64,Vector{Int64}}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}})::Bool
-
-    return all(e -> col[src(e)] in nc[col[dst(e)]], edges(g))
 end
 
 function get_inv_curve(v::NormalToricVariety, nc::Dict{Int64,Vector{Int64}})::Dict{Tuple{Int64,Int64},CohomologyClass}
@@ -39,7 +36,8 @@ function get_inv_curve(v::NormalToricVariety, nc::Dict{Int64,Vector{Int64}})::Di
         for sigma2 in nc[sigma1]
             (sigma1, sigma2) in keys(ans) && continue
 
-            cone_of_curve = intersect(maximal_cones(v)[sigma1], maximal_cones(v)[sigma2])
+            # cone_of_curve = intersect(maximal_cones(v)[sigma1], maximal_cones(v)[sigma2])
+            cone_of_curve = positive_hull(filter(x -> x in rays(maximal_cones(v)[sigma1]), rays(maximal_cones(v)[sigma2])))
 
             index_of_cone_of_curve = findfirst(j -> j == cone_of_curve, cones(v, dim(v) - 1))
             position = [0 for _ in 1:n_cones(v)]  # the position inside the list of all cones. It is an array of length equal to the number of cones, and the cones are listed by decresing dimension. 

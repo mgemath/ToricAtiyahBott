@@ -136,19 +136,15 @@ function just_ev(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict
 
             for n_gamma in nc[col_vert]
                 ray in rays(maximal_cones(v)[n_gamma]) && continue
-                # println(col_vert," " , n_gamma, " ", od[(col_vert, n_gamma)])
-                ans[i] *= od[(col_vert, n_gamma)]^e[k]
-                # println("ans[i]= $(ans[i])")
-                # mul!(ans[i], ans[i], od[(col_vert, n_gamma)]^e[k])
+                # ans[i] *= od[(col_vert, n_gamma)]^e[k]
+                mul!(ans[i], ans[i], od[(col_vert, n_gamma)]^e[k])
                 break
             end
         end
 
-        # mul!(ans[i], ans[i], coef)
         ans[i] *= coef
     end
 
-    # println("col: ", col_vert, "  ", ans[1])
     return sum(ans)
 end
 

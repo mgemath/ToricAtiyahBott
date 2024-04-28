@@ -31,7 +31,7 @@ function multip(M::Ms)::Base.Iterators.Filter
         end
     end
 
-    return Iterators.filter(m -> istrivial(subtract(M, m)), Iterators.product([1:bound[i] for i in eachindex(bound)]...))
+    return Iterators.filter(m -> is_trivial(subtract(M, m)), Iterators.product([1:bound[i] for i in eachindex(bound)]...))
 end
 
 function is_effective_class(D::Vector{CohomologyClass}, C::CohomologyClass)::Bool # To be used when D is the vector of nef divisors

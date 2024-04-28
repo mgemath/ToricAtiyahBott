@@ -18,7 +18,7 @@ Apply the Atiyah-Bott residue formula to compute the integral of the equivariant
 
 In order to use this function, one must define `v`, `beta` and `P` using Oscar:
 ```jldoctest; setup = :(using Oscar, ToricAtiyahBott)
-julia> v = del_pezzo_surface(1); # this is the blow-up of the projective plane at a point
+julia> v = del_pezzo_surface(NormalToricVariety, 1); # this is the blow-up of the projective plane at a point
 
 julia> beta = cohomology_class(toric_divisor(v, [0,0,1,0])); # class of pull back of a line of P2
 
@@ -72,7 +72,7 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
         return nothing
     end
 
-    s = (F.(rand(UInt16, nrays(v)))...,)
+    s = (F.(rand(UInt16, n_rays(v)))...,)
 
     nc = neighbors_cones(v)
     od = omega_dict(v, nc, s)
@@ -108,7 +108,7 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
     # local result::Vector{Vector{T}} = [[F(0) for _ in 1:n_results] for _ in 1:Threads.nthreads()]
     # local result::Array{T,2} = Array{T,2}(undef, Threads.nthreads(), n_results)
     # fill!(result, F(0))
-    local partial_res::Vector{T} = [F(0) for _ in 1:1:n_results]
+    local partial_res::Vector{T} = [F(0) for _ in 1:n_results]
 
     E = F(0)
 
@@ -125,9 +125,8 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
         tree_aut = count_iso(ls)
         g = LStoGraph(ls)
 
-        (rev_dfs, parents, has_ci, subgraph_ends_rev, subgraph_ends, left_siblings) = init_ColorsIt(ls)
-        CI = ColorsIt(ls, n_maximal_cones(v), rev_dfs, parents, has_ci, subgraph_ends_rev, subgraph_ends, left_siblings)
-        for col in Iterators.filter(c -> is_admissible_color(nc, g, c), CI)
+        CI, parents, subgraph_ends = col_it_init(ls, nc)
+        for col in CI
             top_aut::Int64 = count_iso(ls, col)
 
             local store_aut::Dict{Vector{Int64},Int64} = Dict{Vector{Int64},Int64}()
@@ -149,16 +148,13 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
                         partial_res[res] = Base.invokelatest(P[res], v, od, nc, d, g, col, w, m)
                     end
 
-                    all(res -> partial_res[res] == F(0), eachindex(partial_res)) && continue # check if at least
+                    all(res -> partial_res[res] == F(0), eachindex(partial_res)) && continue # check if at least one partial result is not zero
 
                     E = Euler_inv(v, od, nc, otd, d, g, col, w, m) // (aut * prod(w))
 
                     for res in eachindex(partial_res)      # compute each term of the array P
                         partial_res[res] *= E
                         result[res] += partial_res[res]
-                        # mul!(partial_res[res], partial_res[res], E)
-                        # result[Threads.threadid(), res] += partial_res[res]
-                        # add!(result[Threads.threadid(), res], result[Threads.threadid(), res], partial_res[res])
                     end
 
                 end
