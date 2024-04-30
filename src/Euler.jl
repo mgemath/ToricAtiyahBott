@@ -29,7 +29,6 @@ function Euler_inv(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Di
             end
         end
 
-        # PROD = one(T)
         PROD = F(1)
         for W in neighbors(g, O)
             e = Edge(max(O, W), min(O, W))#e = Edge(min(O,W),max(O,W))

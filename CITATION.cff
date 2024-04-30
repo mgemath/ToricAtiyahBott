@@ -4,8 +4,8 @@ authors:
 - family-names: "Muratore"
   given-names: "Giosuè"
   orcid: "https://orcid.org/0000-0003-0038-1432"
-title: "AtiyahBott"
-version: 0.1.0
+title: "ToricAtiyahBott"
+version: 1.1.0
 doi: 0
 date-released: 2023-06-06
 url: "https://github.com/mgemath/ToricAtiyahBott.jl"
@@ -15,14 +15,14 @@ preferred-citation:
   - family-names: "Muratore"
     given-names: "Giosuè"
     orcid: "https://orcid.org/0000-0003-0038-1432"
-  doi: ""
-  journal: ""
+  doi: "doi.org/10.1016/j.jsc.2024.102330"
+  journal: "Journal of Symbolic Computation"
   month: 
   start:  # First page number
   end:  # Last page number
-  title: "Computations of Gromov-Witten invariants of toric varieties (in preparation)"
+  title: "Computations of Gromov-Witten invariants of toric varieties"
   issue: 
-  volume:
-  year: 
-  url: ""
-  issn: 
+  volume: 125
+  year: 2024
+  url: "https://www.sciencedirect.com/science/article/abs/pii/S0747717124000348"
+  issn: 0747-7171

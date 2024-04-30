@@ -10,9 +10,7 @@ Equivariant class equals to the number one. Useful to compute the degree of a mo
 # Example
 Let ``v`` be a toric variety and ``\\beta`` be a class such that ``\\overline{M}_{0,0}(v,\\beta)`` is zero dimensional. The following Gromov-Witten invariants
 ```math
-\\begin{equation}
 \\int_{\\overline{M}_{0,0}(v,\\beta)}1 
-\\end{equation}
 ```
 can be computed, for example, as
 ```jldoctest; setup = :(using Oscar, ToricAtiyahBott)

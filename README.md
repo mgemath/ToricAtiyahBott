@@ -26,6 +26,7 @@ push_ev(l)  (push forward with respect to the forgetful map of the pull back of 
 R1_ev(l)           (first derived functor of direct image of the pull back of l)
 Psi(a)        (cycle of psi-classes)
 Jet(p,l)      (Euler class of the jet bundle J^p with respect to l)
+class_one()   (the trivial class)
 ```
 Brief descriptions on these functions can be obtained through the standard help functionality of Julia by typing "?" and then the name of the function.
 ```julia-repl
