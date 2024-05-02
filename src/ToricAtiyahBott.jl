@@ -8,7 +8,9 @@ module ToricAtiyahBott
 
 using Oscar
 using ProgressMeter
+using Combinatorics
 
+include("Arithmetic.jl")
 include("Main.jl")
 
 include("Checks.jl")

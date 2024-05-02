@@ -1,4 +1,4 @@
-function invert_marks(mark::Tuple{Vararg{Int64}}, n_vert::Int64)::Dict{Int64,Vector{Int64}}
+function invert_marks(mark::Marks_type, n_vert::Int64)::Dict{Int64,Vector{Int64}}
 
     D = Dict{Int64,Vector{Int64}}([v for v in 1:n_vert] .=> [Int64[] for _ in 1:n_vert])
 
@@ -7,14 +7,14 @@ function invert_marks(mark::Tuple{Vararg{Int64}}, n_vert::Int64)::Dict{Int64,Vec
     return D
 end
 
-function num_marks(mark::Tuple{Vararg{Int64}}, v::Int64)::Int64
+function num_marks(mark::Marks_type, v::Int64)::Int64
 
     length(mark) == 0 && return 0
 
     return count(t -> t == v, mark)
 end
 
-function ismin(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int64}}, par::Vector{Int64}, sub_end::Vector{Int64})::Bool
+function ismin(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Marks_type, par::Vector{Int64}, sub_end::Vector{Int64})::Bool
 
     marks = sort(unique(m))
 

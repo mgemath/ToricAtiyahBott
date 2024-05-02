@@ -107,7 +107,7 @@ function ev(j::Int64, l::ToricLineBundle)::EquivariantClass
     return ev(j, cohomology_class(l))
 end
 
-function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, j::Int64, cc::CohomologyClass)::T
+function _ev(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Marks_type, j::Int64, cc::CohomologyClass)::T
 
     length(marks) == 0 && return F(1)
     if (col[marks[j]], cc) in keys(v.__attrs[:ev_dict])

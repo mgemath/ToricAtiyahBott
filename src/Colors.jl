@@ -256,13 +256,13 @@ end
 -
 ### this function counts the isomorphisms of a tree with level sequence ls. Optionally, the tree can be colored with coloration col
 
-function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, m::Tuple{Vararg{Int64}})::Int64
+function count_iso(ls::Vector{Int64}, col::Tuple{Vararg{Int64}}, marks::Marks_type)::Int64
 
-    isempty(m) && return count_iso(ls, col)
+    isempty(marks) && return count_iso(ls, col)
 
     temp_col = Vector{Int64}(undef, length(ls))
     for i in eachindex(temp_col)
-        if i in m
+        if i in marks
             temp_col[i] = typemax(Int64) - i
         else
             temp_col[i] = col[i]

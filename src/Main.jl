@@ -1,8 +1,6 @@
 export
     IntegrateAB
 
-T = QQFieldElem;
-F = T;  # This line is useful to fix the arithmetic of the numbers. T is the type we use, and F is a function that returns the numbers 0 and 1 to the same type as T.
 
 """
     IntegrateAB(v, beta, m, P; do_check, show_bar)
@@ -105,17 +103,13 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
     end
 
     local result::Vector{T} = [F(0) for _ in 1:n_results]
-    # local result::Vector{Vector{T}} = [[F(0) for _ in 1:n_results] for _ in 1:Threads.nthreads()]
-    # local result::Array{T,2} = Array{T,2}(undef, Threads.nthreads(), n_results)
-    # fill!(result, F(0))
     local partial_res::Vector{T} = [F(0) for _ in 1:n_results]
-
-    E = F(0)
 
     max_n_vert = mapreduce(D -> Int64(integrate(D * beta)), +, NEF, init=1)
     if show_bar #set up progress data
         number_trees = A000055(max_n_vert)
-        threshold = sum(vert -> number_trees[vert] * (n_maximal_cones(v)) * ((length(nc[1]))^(vert - 1)) * (vert^n_marks), 2:max_n_vert)
+        # threshold = sum(vert -> number_trees[vert] * (n_maximal_cones(v)) * ((length(nc[1]))^(vert - 1)) * (vert^n_marks), 2:max_n_vert)
+        threshold = sum(vert -> number_trees[vert] * (n_maximal_cones(v)) * ((length(nc[1]))^(vert - 1)) * binomial(vert+n_marks-1, n_marks), 2:max_n_vert)
         progress_bar::Progress = Progress(threshold, barglyphs=BarGlyphs("[=> ]"), color=:green)
         current_graph::Threads.Atomic{Int64} = Threads.Atomic{Int}(0)
     end
@@ -129,43 +123,51 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
         for col in CI
             top_aut::Int64 = count_iso(ls, col)
 
-            local store_aut::Dict{Vector{Int64},Int64} = Dict{Vector{Int64},Int64}()
-            local temp_m::Vector{Int64}
-            local aut::Int64
+            aut::Int64 = 0
 
             MULTI = collect(multip(Ms(v, NEF, g, col, d, beta)))
+            # last_seen_unique = Int64[]
 
-            for m in Base.Iterators.filter(m -> top_aut == 1 || isempty(m) || maximum(m) < 3 || ismin(ls, col, m, parents, subgraph_ends), Base.Iterators.product(repeat([1:nv(g)], n_marks)...))
-
-                temp_m = sort(unique(m))
-                if !haskey(store_aut, temp_m)
-                    store_aut[temp_m] = count_iso(ls, col, m)
-                end
-                aut = store_aut[temp_m]
-
+            # for m_inv in Base.Iterators.filter(m -> top_aut == 1 || isempty(m) || maximum(m) < 3 || ismin(ls, col, (m...,), parents, subgraph_ends), with_replacement_combinations(1:nv(g), n_marks))
+            for m_inv in with_replacement_combinations(1:nv(g), n_marks)
+                aut = count_iso(ls, col, m_inv)
+                
+                # u = unique(m_inv)
+                # if last_seen_unique != u
+                #     last_seen_unique = u
+                #     aut = count_iso(ls, col, (m_inv...,))
+                # end
+                
                 for w in MULTI
-                    for res in eachindex(partial_res)
-                        partial_res[res] = Base.invokelatest(P[res], v, od, nc, d, g, col, w, m)
+                    PRODW = prod(w)
+                    E = F(0)
+                    # for m_v in multiset_permutations(m_inv, n_marks)
+                    for m in Base.Iterators.filter(mul_per -> top_aut == 1 || isempty(mul_per) || maximum(mul_per) < 3 || ismin(ls, col, mul_per, parents, subgraph_ends), multiset_permutations(m_inv, n_marks))
+
+                        for res in eachindex(partial_res)
+                            partial_res[res] = Base.invokelatest(P[res], v, od, nc, d, g, col, w, m)
+                        end
+
+                        all(res -> partial_res[res] == F(0), eachindex(partial_res)) && continue # check if at least one partial result is not zero
+                   
+                        if E == F(0)
+                            E = Euler_inv(v, od, nc, otd, d, g, col, w, m) // (aut * PRODW)
+                        end
+
+                        for res in eachindex(partial_res)      # compute each term of the array P
+                            partial_res[res] *= E
+                            result[res] += partial_res[res]
+                        end
                     end
-
-                    all(res -> partial_res[res] == F(0), eachindex(partial_res)) && continue # check if at least one partial result is not zero
-
-                    E = Euler_inv(v, od, nc, otd, d, g, col, w, m) // (aut * prod(w))
-
-                    for res in eachindex(partial_res)      # compute each term of the array P
-                        partial_res[res] *= E
-                        result[res] += partial_res[res]
-                    end
-
                 end
                 if show_bar #update the progress bar
-                    Threads.atomic_add!(current_graph, tree_aut ÷ aut)
+                    # Threads.atomic_add!(current_graph, tree_aut ÷ aut)
+                    Threads.atomic_add!(current_graph, tree_aut ÷ top_aut)
                     # Threads.lock(l)
                     update!(progress_bar, current_graph[],
                         showvalues=[(:"Total number of graphs", threshold), (:"Current graph", current_graph[])])
                     # Threads.unlock(l)
                 end
-
             end
         end
 

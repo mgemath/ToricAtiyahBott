@@ -76,7 +76,7 @@ function _Jet(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int64, null
     return Cycle(p + 1, psi_deg)
 end
 
-function _Jet(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Tuple{Vararg{Int64}}, p::Int64, cc::CohomologyClass, st::Tuple{Vararg{Int64}})::T
+function _Jet(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, g::Graph{Undirected}, col::Tuple{Vararg{Int64}}, weights::Tuple{Vararg{Int64}}, marks::Marks_type, p::Int64, cc::CohomologyClass, st::Tuple{Vararg{Int64}})::T
 
     local ans = F(0)
 
