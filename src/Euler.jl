@@ -4,10 +4,10 @@ function Euler_inv(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Di
 
     ans = F(1)
 
-    for e in edges(g)
-        # ans *= Lambda_Gamma_e(v, od, nc, iv, col, d[e], e)
-        mul!(ans, ans, Lambda_Gamma_e(v, od, nc, iv, col, d[e], e))
-    end
+    # for e in edges(g)
+    #     # ans *= Lambda_Gamma_e(v, od, nc, iv, col, d[e], e)
+    #     mul!(ans, ans, Lambda_Gamma_e(v, od, nc, iv, col, d[e], e))
+    # end
 
     for O in 1:nv(g)
         t_O = length(neighbors(g, O))  # number of edges at O
@@ -45,10 +45,7 @@ function Euler_inv(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Di
     return ans
 end
 
-function Lambda_Gamma_e(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, col::Tuple{Vararg{Int64}}, d_e::Int64, e::Edge) #
-
-    n_sigma2 = col[src(e)]
-    n_sigma1 = col[dst(e)]
+function Lambda_Gamma_e(v::NormalToricVariety, od::Dict{Tuple{Int64,Int64},T}, nc::Dict{Int64,Vector{Int64}}, iv::Dict{Tuple{Int64,Int64},CohomologyClass}, d_e::Int64, n_sigma1::Int64, n_sigma2::Int64)::T
 
     b = od[(n_sigma1, n_sigma2)] // d_e #omega(v, n_sigma1, n_sigma2, scalars)//d_e
 

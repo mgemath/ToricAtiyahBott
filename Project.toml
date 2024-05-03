@@ -1,7 +1,7 @@
 name = "ToricAtiyahBott"
 uuid = "72dfc14a-8332-4639-b9f3-8b017b604ecf"
 authors = ["Giosuè Muratore <muratore.g.e@gmail.com >"]
-version = "1.2.0"
+version = "1.2.1"
 
 [deps]
 Combinatorics = "861a8166-3701-5b0c-9a16-15d98fcdc6aa"

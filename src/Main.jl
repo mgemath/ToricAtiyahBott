@@ -114,6 +114,8 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
         current_graph::Threads.Atomic{Int64} = Threads.Atomic{Int}(0)
     end
 
+    Lambda_gamma_e_dict::Dict{Tuple{Int64, Int64, Int64}, T} = Dict{Tuple{Int64, Int64, Int64}, T}()
+    
     for ls in Iterators.flatten([TreeIt(i) for i in 2:max_n_vert])
 
         tree_aut = count_iso(ls)
@@ -141,6 +143,7 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
                 for w in MULTI
                     PRODW = prod(w)
                     E = F(0)
+                    D = Dict(edges(g) .=> w)
                     # for m_v in multiset_permutations(m_inv, n_marks)
                     for m in Base.Iterators.filter(mul_per -> top_aut == 1 || isempty(mul_per) || maximum(mul_per) < 3 || ismin(ls, col, mul_per, parents, subgraph_ends), multiset_permutations(m_inv, n_marks))
 
@@ -152,6 +155,13 @@ function IntegrateAB(v::NormalToricVariety, beta::CohomologyClass, n_marks::Int6
                    
                         if E == F(0)
                             E = Euler_inv(v, od, nc, otd, d, g, col, w, m) // (aut * PRODW)
+                            for e in edges(g)
+                                triple = (D[e], min(col[src(e)], col[dst(e)]), max(col[src(e)], col[dst(e)]))
+                                if !haskey(Lambda_gamma_e_dict, triple)
+                                    Lambda_gamma_e_dict[triple] = Lambda_Gamma_e(v, od, nc, d, triple[1], triple[2], triple[3])
+                                end
+                                mul!(E, E, Lambda_gamma_e_dict[triple])
+                            end
                         end
 
                         for res in eachindex(partial_res)      # compute each term of the array P
